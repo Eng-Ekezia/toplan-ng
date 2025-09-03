@@ -1,7 +1,6 @@
 import { create } from "zustand";
 import { CalculationInput, CalculationResult, VertexInput } from "@/lib/types";
 import { calculatePlanimetry } from "@/lib/calculations";
-// A linha abaixo é necessária se você instalou e configurou o sonner
 import { toast } from "sonner";
 
 const initialInputState: CalculationInput = {
@@ -18,6 +17,9 @@ const initialInputState: CalculationInput = {
     distance: "",
   }),
 };
+
+// Chave para o localStorage
+const LOCAL_STORAGE_KEY = "toplan_projects";
 
 interface StoreState {
   input: CalculationInput;
@@ -44,6 +46,12 @@ interface StoreActions {
   ) => void;
   setActiveTab: (tab: "data" | "results" | "settings") => void;
   runCalculation: () => void;
+  // Novas ações de persistência
+  saveProject: () => void;
+  loadProject: (projectName: string) => void;
+  getSavedProjects: () => string[];
+  deleteProject: (projectName: string) => void;
+  resetInput: () => void;
 }
 
 export const useCalculationStore = create<StoreState & StoreActions>(
@@ -107,9 +115,7 @@ export const useCalculationStore = create<StoreState & StoreActions>(
         if (!inputData.projectName || inputData.projectName.trim() === "") {
           throw new Error("O nome do projeto é obrigatório.");
         }
-
         const calculationResult = calculatePlanimetry(inputData);
-
         set({
           result: calculationResult,
           isLoading: false,
@@ -125,6 +131,54 @@ export const useCalculationStore = create<StoreState & StoreActions>(
         toast.error(errorMessage);
         console.error(errorMessage);
       }
+    },
+
+    // Implementação das novas ações
+    getSavedProjects: () => {
+      if (typeof window === "undefined") return [];
+      const projects = localStorage.getItem(LOCAL_STORAGE_KEY);
+      return projects ? Object.keys(JSON.parse(projects)) : [];
+    },
+
+    saveProject: () => {
+      const { input } = get();
+      if (!input.projectName.trim()) {
+        toast.error("O nome do projeto é obrigatório para salvar.");
+        return;
+      }
+      const projects = JSON.parse(
+        localStorage.getItem(LOCAL_STORAGE_KEY) || "{}"
+      );
+      projects[input.projectName] = input;
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(projects));
+      toast.success(`Projeto "${input.projectName}" salvo com sucesso!`);
+    },
+
+    loadProject: (projectName) => {
+      const projects = JSON.parse(
+        localStorage.getItem(LOCAL_STORAGE_KEY) || "{}"
+      );
+      const projectData = projects[projectName];
+      if (projectData) {
+        set({ input: projectData, result: null, activeTab: "data" });
+        toast.success(`Projeto "${projectName}" carregado!`);
+      } else {
+        toast.error("Projeto não encontrado.");
+      }
+    },
+
+    deleteProject: (projectName) => {
+      const projects = JSON.parse(
+        localStorage.getItem(LOCAL_STORAGE_KEY) || "{}"
+      );
+      delete projects[projectName];
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(projects));
+      toast.info(`Projeto "${projectName}" deletado.`);
+    },
+
+    resetInput: () => {
+      set({ input: initialInputState, result: null });
+      toast.info("Campos de entrada foram limpos.");
     },
   })
 );
