@@ -18,7 +18,6 @@ const initialInputState: CalculationInput = {
   }),
 };
 
-// Chave para o localStorage
 const LOCAL_STORAGE_KEY = "toplan_projects";
 
 interface StoreState {
@@ -26,6 +25,7 @@ interface StoreState {
   result: CalculationResult | null;
   isLoading: boolean;
   activeTab: "data" | "results" | "settings";
+  calculationSuccess: boolean; // Flag para comunicar o sucesso à UI
 }
 
 interface StoreActions {
@@ -46,7 +46,7 @@ interface StoreActions {
   ) => void;
   setActiveTab: (tab: "data" | "results" | "settings") => void;
   runCalculation: () => void;
-  // Novas ações de persistência
+  setCalculationSuccess: (status: boolean) => void; // Ação para resetar a flag
   saveProject: () => void;
   loadProject: (projectName: string) => void;
   getSavedProjects: () => string[];
@@ -60,9 +60,12 @@ export const useCalculationStore = create<StoreState & StoreActions>(
     result: null,
     isLoading: false,
     activeTab: "data",
+    calculationSuccess: false, // Estado inicial da flag
 
     setInput: (field, value) =>
       set((state) => ({ input: { ...state.input, [field]: value } })),
+
+    // ... (outras ações como setNestedInput, setNumPoints, updateVertexInput)
     setNestedInput: (parentField, childField, value) =>
       set((state) => ({
         input: {
@@ -106,20 +109,25 @@ export const useCalculationStore = create<StoreState & StoreActions>(
           },
         };
       }),
+
     setActiveTab: (tab) => set({ activeTab: tab }),
 
+    setCalculationSuccess: (status) => set({ calculationSuccess: status }),
+
     runCalculation: () => {
-      set({ isLoading: true, result: null });
+      set({ isLoading: true, result: null, calculationSuccess: false });
       try {
         const inputData = get().input;
         if (!inputData.projectName || inputData.projectName.trim() === "") {
           throw new Error("O nome do projeto é obrigatório.");
         }
         const calculationResult = calculatePlanimetry(inputData);
+
+        // **NÃO** muda a aba aqui, apenas sinaliza o sucesso
         set({
           result: calculationResult,
           isLoading: false,
-          activeTab: "results",
+          calculationSuccess: true,
         });
         toast.success("Cálculo realizado com sucesso!");
       } catch (error: unknown) {
@@ -133,13 +141,12 @@ export const useCalculationStore = create<StoreState & StoreActions>(
       }
     },
 
-    // Implementação das novas ações
+    // ... (ações de persistência como getSavedProjects, saveProject, etc.)
     getSavedProjects: () => {
       if (typeof window === "undefined") return [];
       const projects = localStorage.getItem(LOCAL_STORAGE_KEY);
       return projects ? Object.keys(JSON.parse(projects)) : [];
     },
-
     saveProject: () => {
       const { input } = get();
       if (!input.projectName.trim()) {
@@ -153,7 +160,6 @@ export const useCalculationStore = create<StoreState & StoreActions>(
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(projects));
       toast.success(`Projeto "${input.projectName}" salvo com sucesso!`);
     },
-
     loadProject: (projectName) => {
       const projects = JSON.parse(
         localStorage.getItem(LOCAL_STORAGE_KEY) || "{}"
@@ -166,7 +172,6 @@ export const useCalculationStore = create<StoreState & StoreActions>(
         toast.error("Projeto não encontrado.");
       }
     },
-
     deleteProject: (projectName) => {
       const projects = JSON.parse(
         localStorage.getItem(LOCAL_STORAGE_KEY) || "{}"
@@ -175,7 +180,6 @@ export const useCalculationStore = create<StoreState & StoreActions>(
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(projects));
       toast.info(`Projeto "${projectName}" deletado.`);
     },
-
     resetInput: () => {
       set({ input: initialInputState, result: null });
       toast.info("Campos de entrada foram limpos.");

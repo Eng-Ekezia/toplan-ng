@@ -92,9 +92,9 @@ export function PolygonCanvas({ coordinates }: PolygonCanvasProps) {
       <CardContent>
         <canvas
           ref={canvasRef}
-          width={500}
-          height={500}
-          className="w-full h-auto border rounded-md bg-white"
+          width={800}
+          height={800}
+          className="w-full aspect-square border rounded-md bg-white"
         />
       </CardContent>
     </Card>
