@@ -24,7 +24,34 @@ export interface CalculationInput {
   vertices: VertexInput[];
 }
 
-// Define a estrutura para os resultados do cálculo
+// Define a estrutura para as coordenadas finais de um ponto
+export interface FinalCoordinate {
+  point: string;
+  east: number;
+  north: number;
+}
+
+// Define a estrutura para a análise de erros
+export interface ErrorAnalysis {
+  angular: {
+    sum: number;
+    expected: number;
+    error: number;
+    correction: number;
+  };
+  linear: {
+    sumEast: number;
+    sumNorth: number;
+    errorEast: number;
+    errorNorth: number;
+    totalError: number;
+    precision: string;
+  };
+  perimeter: number;
+}
+
+// Define a estrutura completa para os resultados do cálculo
 export interface CalculationResult {
-  // Por enquanto, deixaremos vazio. Preencheremos no futuro.
+  finalCoordinates: FinalCoordinate[];
+  errorAnalysis: ErrorAnalysis;
 }

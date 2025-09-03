@@ -4,5 +4,6 @@
   "typescript.tsdk": "node_modules/typescript/lib",
   "tailwindCSS.experimental.classRegex": [
     ["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"]
-  ]
+  ],
+  "css.lint.unknownAtRules": "ignore" // Adicione esta linha
 }

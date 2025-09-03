@@ -1,10 +1,10 @@
+import { ResultsDisplay } from "@/components/features/ResultsDisplay";
+
 export default function ResultsPage() {
   return (
     <div>
-      <h2 className="text-xl font-semibold">Resultados</h2>
-      <p className="text-muted-foreground">
-        Aqui serão exibidos os resultados do cálculo e o gráfico da poligonal.
-      </p>
+      <h2 className="text-xl font-semibold mb-4">Resultados</h2>
+      <ResultsDisplay />
     </div>
   );
 }
