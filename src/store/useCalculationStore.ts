@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { CalculationInput, CalculationResult, VertexInput } from "@/lib/types";
 import { calculatePlanimetry } from "@/lib/calculations";
+// A linha abaixo é necessária se você instalou e configurou o sonner
 import { toast } from "sonner";
 
 const initialInputState: CalculationInput = {
@@ -122,7 +123,7 @@ export const useCalculationStore = create<StoreState & StoreActions>(
             ? error.message
             : "Ocorreu um erro desconhecido.";
         toast.error(errorMessage);
-        console.error(errorMessage); // Adiciona log de erro para depuração
+        console.error(errorMessage);
       }
     },
   })
