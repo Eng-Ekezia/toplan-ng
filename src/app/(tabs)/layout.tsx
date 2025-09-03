@@ -1,5 +1,6 @@
 import { Header } from "@/components/layout/Header";
 import { BottomNav } from "@/components/layout/BottomNav";
+import { Toaster } from "@/components/ui/sonner";
 
 export default function TabsLayout({
   children,
@@ -11,6 +12,8 @@ export default function TabsLayout({
       <Header />
       <main className="pt-14 pb-16 px-4 py-4">{children}</main>
       <BottomNav />
+      <Toaster position="top-center" richColors />{" "}
+      {/* Configuração do Toaster */}
     </div>
   );
 }
