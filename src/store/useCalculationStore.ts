@@ -1,7 +1,8 @@
 import { create } from "zustand";
 import { CalculationInput, CalculationResult, VertexInput } from "@/lib/types";
+import { calculatePlanimetry } from "@/lib/calculations";
+import { toast } from "sonner";
 
-// Define o estado inicial para os nossos formulários
 const initialInputState: CalculationInput = {
   projectName: "",
   clientName: "",
@@ -17,55 +18,112 @@ const initialInputState: CalculationInput = {
   }),
 };
 
-// Define a interface para o nosso store, incluindo o estado e as ações
-interface CalculationState {
+interface StoreState {
   input: CalculationInput;
   result: CalculationResult | null;
   isLoading: boolean;
   activeTab: "data" | "results" | "settings";
+}
 
-  // Ações para modificar o estado
-  setInput: (newInput: Partial<CalculationInput>) => void;
+interface StoreActions {
+  setInput: <K extends keyof CalculationInput>(
+    field: K,
+    value: CalculationInput[K]
+  ) => void;
+  setNestedInput: (
+    parentField: "initialAzimuth" | "initialCoordinates",
+    childField: string,
+    value: string | number
+  ) => void;
   setNumPoints: (numPoints: number) => void;
+  updateVertexInput: (
+    index: number,
+    field: keyof VertexInput,
+    value: string | number
+  ) => void;
   setActiveTab: (tab: "data" | "results" | "settings") => void;
   runCalculation: () => void;
 }
 
-// Cria o store do Zustand
-export const useCalculationStore = create<CalculationState>((set, get) => ({
-  input: initialInputState,
-  result: null,
-  isLoading: false,
-  activeTab: "data",
+export const useCalculationStore = create<StoreState & StoreActions>(
+  (set, get) => ({
+    input: initialInputState,
+    result: null,
+    isLoading: false,
+    activeTab: "data",
 
-  setInput: (newInput) =>
-    set((state) => ({
-      input: { ...state.input, ...newInput },
-    })),
-
-  setNumPoints: (numPoints) => {
-    if (numPoints < 3) return;
-    const currentVertices = get().input.vertices;
-    const newVertices: VertexInput[] = Array(numPoints)
-      .fill(null)
-      .map(
-        (_, i) =>
-          currentVertices[i] || {
-            angle_deg: "",
-            angle_min: "",
-            angle_sec: "",
-            distance: "",
+    setInput: (field, value) =>
+      set((state) => ({ input: { ...state.input, [field]: value } })),
+    setNestedInput: (parentField, childField, value) =>
+      set((state) => ({
+        input: {
+          ...state.input,
+          [parentField]: {
+            ...(state.input[parentField] as object),
+            [childField]: value,
+          },
+        },
+      })),
+    setNumPoints: (numPoints) => {
+      if (numPoints < 3) return;
+      const currentVertices = get().input.vertices;
+      const newVertices: VertexInput[] = Array(numPoints)
+        .fill(null)
+        .map(
+          (_, i) =>
+            currentVertices[i] || {
+              angle_deg: "",
+              angle_min: "",
+              angle_sec: "",
+              distance: "",
+            }
+        );
+      set((state) => ({
+        input: { ...state.input, numPoints, vertices: newVertices },
+      }));
+    },
+    updateVertexInput: (index, field, value) =>
+      set((state) => {
+        const newVertices = state.input.vertices.map((vertex, i) => {
+          if (i === index) {
+            return { ...vertex, [field]: value };
           }
-      );
-    set((state) => ({
-      input: { ...state.input, numPoints, vertices: newVertices },
-    }));
-  },
+          return vertex;
+        });
+        return {
+          input: {
+            ...state.input,
+            vertices: newVertices,
+          },
+        };
+      }),
+    setActiveTab: (tab) => set({ activeTab: tab }),
 
-  setActiveTab: (tab) => set({ activeTab: tab }),
+    runCalculation: () => {
+      set({ isLoading: true, result: null });
+      try {
+        const inputData = get().input;
+        if (!inputData.projectName || inputData.projectName.trim() === "") {
+          throw new Error("O nome do projeto é obrigatório.");
+        }
 
-  runCalculation: () => {
-    // Lógica do cálculo virá aqui no futuro
-    console.log("Calculando com os dados:", get().input);
-  },
-}));
+        const calculationResult = calculatePlanimetry(inputData);
+
+        set({
+          result: calculationResult,
+          isLoading: false,
+          activeTab: "results",
+        });
+        toast.success("Cálculo realizado com sucesso!");
+      } catch (error: unknown) {
+        set({ isLoading: false });
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : "Ocorreu um erro desconhecido.";
+        toast.error(errorMessage);
+        console.error(errorMessage); // Adiciona log de erro para depuração
+      }
+    },
+  })
+);
