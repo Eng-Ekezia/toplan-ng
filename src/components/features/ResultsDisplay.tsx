@@ -1,19 +1,23 @@
 "use client";
 import { useCalculationStore } from "@/store/useCalculationStore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PolygonCanvas } from "./PolygonCanvas";
 
 export function ResultsDisplay() {
   const { result, isLoading, input } = useCalculationStore();
 
   if (isLoading) {
-    return <p>Calculando...</p>;
+    return <p className="text-center">Calculando...</p>;
   }
 
   if (!result) {
     return (
-      <p className="text-muted-foreground text-center">
-        Nenhum resultado para exibir. Preencha os dados e clique em Calcular.
-      </p>
+      <div className="text-center text-muted-foreground mt-8">
+        <p>Nenhum resultado para exibir.</p>
+        <p className="text-sm">
+          Preencha os dados na aba Dados e clique em Calcular.
+        </p>
+      </div>
     );
   }
 
@@ -32,6 +36,9 @@ export function ResultsDisplay() {
         </CardContent>
       </Card>
 
+      {/* Gráfico da Poligonal */}
+      <PolygonCanvas coordinates={finalCoordinates} />
+
       <Card>
         <CardHeader>
           <CardTitle>Coordenadas Finais</CardTitle>
@@ -41,14 +48,14 @@ export function ResultsDisplay() {
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b">
-                  <th className="p-2">Ponto</th>
-                  <th className="p-2">Leste (X)</th>
-                  <th className="p-2">Norte (Y)</th>
+                  <th className="p-2 font-semibold">Ponto</th>
+                  <th className="p-2 font-semibold">Leste (X)</th>
+                  <th className="p-2 font-semibold">Norte (Y)</th>
                 </tr>
               </thead>
               <tbody>
                 {finalCoordinates.map(({ point, east, north }) => (
-                  <tr key={point} className="border-b">
+                  <tr key={point} className="border-b last:border-b-0">
                     <td className="p-2 font-medium">{point}</td>
                     <td className="p-2">{east.toFixed(3)}</td>
                     <td className="p-2">{north.toFixed(3)}</td>
@@ -65,12 +72,21 @@ export function ResultsDisplay() {
           <CardTitle>Análise de Erros</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-sm">
-          <p>Perímetro: {errorAnalysis.perimeter.toFixed(3)} m</p>
-          <p>Erro Angular Total: {errorAnalysis.angular.error.toFixed(5)}°</p>
           <p>
-            Erro Linear Total: {errorAnalysis.linear.totalError.toFixed(5)} m
+            Perímetro: <strong>{errorAnalysis.perimeter.toFixed(3)} m</strong>
           </p>
-          <p>Precisão do Levantamento: {errorAnalysis.linear.precision}</p>
+          <p>
+            Erro Angular Total:{" "}
+            <strong>{errorAnalysis.angular.error.toFixed(5)}°</strong>
+          </p>
+          <p>
+            Erro Linear Total:{" "}
+            <strong>{errorAnalysis.linear.totalError.toFixed(5)} m</strong>
+          </p>
+          <p>
+            Precisão do Levantamento:{" "}
+            <strong>{errorAnalysis.linear.precision}</strong>
+          </p>
         </CardContent>
       </Card>
     </div>
