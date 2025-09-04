@@ -1,23 +1,35 @@
+// src/store/useCalculationStore.ts
+
 import { create } from "zustand";
-import { CalculationInput, CalculationResult, VertexInput } from "@/lib/types";
+import {
+  CalculationInput,
+  CalculationResult,
+  VertexInput,
+  DetailInput,
+} from "@/lib/types";
 import { calculatePlanimetry } from "@/lib/calculations";
 import { toast } from "sonner";
 
-const initialInputState: CalculationInput = {
+const createInitialState = (numPoints: number): CalculationInput => ({
   projectName: "",
   clientName: "",
-  numPoints: 4,
+  numPoints,
   angleType: "internal",
   initialAzimuth: { deg: "", min: "", sec: "" },
   initialCoordinates: { east: "", north: "" },
-  // Inicializa com 4 vértices vazios
-  vertices: Array(4).fill({
+  vertices: Array(numPoints).fill({
     angle_deg: "",
     angle_min: "",
     angle_sec: "",
     distance: "",
   }),
-};
+  // Inicializa o array de detalhes com um subarray para cada vértice
+  details: Array(numPoints)
+    .fill(null)
+    .map(() => []),
+});
+
+const initialInputState = createInitialState(4);
 
 const LOCAL_STORAGE_KEY = "toplan_projects";
 
@@ -26,7 +38,7 @@ interface StoreState {
   result: CalculationResult | null;
   isLoading: boolean;
   activeTab: "data" | "results" | "settings";
-  calculationSuccess: boolean; // Flag para comunicar o sucesso à UI
+  calculationSuccess: boolean;
 }
 
 interface StoreActions {
@@ -45,9 +57,19 @@ interface StoreActions {
     field: keyof VertexInput,
     value: string | number
   ) => void;
+  // Ações para detalhes
+  addDetail: (vertexIndex: number) => void;
+  removeDetail: (vertexIndex: number, detailIndex: number) => void;
+  updateDetailInput: (
+    vertexIndex: number,
+    detailIndex: number,
+    field: keyof DetailInput,
+    value: string | number
+  ) => void;
+
   setActiveTab: (tab: "data" | "results" | "settings") => void;
   runCalculation: () => void;
-  setCalculationSuccess: (status: boolean) => void; // Ação para resetar a flag
+  setCalculationSuccess: (status: boolean) => void;
   saveProject: () => void;
   loadProject: (projectName: string) => void;
   getSavedProjects: () => string[];
@@ -61,12 +83,11 @@ export const useCalculationStore = create<StoreState & StoreActions>(
     result: null,
     isLoading: false,
     activeTab: "data",
-    calculationSuccess: false, // Estado inicial da flag
+    calculationSuccess: false,
 
     setInput: (field, value) =>
       set((state) => ({ input: { ...state.input, [field]: value } })),
 
-    // ... (outras ações como setNestedInput, setNumPoints, updateVertexInput)
     setNestedInput: (parentField, childField, value) =>
       set((state) => ({
         input: {
@@ -79,20 +100,30 @@ export const useCalculationStore = create<StoreState & StoreActions>(
       })),
     setNumPoints: (numPoints) => {
       if (numPoints < 3) return;
-      const currentVertices = get().input.vertices;
+      const currentInput = get().input;
       const newVertices: VertexInput[] = Array(numPoints)
         .fill(null)
         .map(
           (_, i) =>
-            currentVertices[i] || {
+            currentInput.vertices[i] || {
               angle_deg: "",
               angle_min: "",
               angle_sec: "",
               distance: "",
             }
         );
+      // Garante que o array de detalhes tenha o mesmo tamanho que o de vértices
+      const newDetails: DetailInput[][] = Array(numPoints)
+        .fill(null)
+        .map((_, i) => currentInput.details[i] || []);
+
       set((state) => ({
-        input: { ...state.input, numPoints, vertices: newVertices },
+        input: {
+          ...state.input,
+          numPoints,
+          vertices: newVertices,
+          details: newDetails,
+        },
       }));
     },
     updateVertexInput: (index, field, value) =>
@@ -111,6 +142,38 @@ export const useCalculationStore = create<StoreState & StoreActions>(
         };
       }),
 
+    // Implementação das ações para detalhes
+    addDetail: (vertexIndex) =>
+      set((state) => {
+        const newDetails = [...state.input.details];
+        newDetails[vertexIndex] = [
+          ...newDetails[vertexIndex],
+          { angle_deg: "", angle_min: "", angle_sec: "", distance: "" },
+        ];
+        return { input: { ...state.input, details: newDetails } };
+      }),
+
+    removeDetail: (vertexIndex, detailIndex) =>
+      set((state) => {
+        const newDetails = [...state.input.details];
+        newDetails[vertexIndex] = newDetails[vertexIndex].filter(
+          (_, i) => i !== detailIndex
+        );
+        return { input: { ...state.input, details: newDetails } };
+      }),
+
+    updateDetailInput: (vertexIndex, detailIndex, field, value) =>
+      set((state) => {
+        const newDetails = [...state.input.details];
+        newDetails[vertexIndex] = newDetails[vertexIndex].map((detail, i) => {
+          if (i === detailIndex) {
+            return { ...detail, [field]: value };
+          }
+          return detail;
+        });
+        return { input: { ...state.input, details: newDetails } };
+      }),
+
     setActiveTab: (tab) => set({ activeTab: tab }),
 
     setCalculationSuccess: (status) => set({ calculationSuccess: status }),
@@ -124,7 +187,6 @@ export const useCalculationStore = create<StoreState & StoreActions>(
         }
         const calculationResult = calculatePlanimetry(inputData);
 
-        // **NÃO** muda a aba aqui, apenas sinaliza o sucesso
         set({
           result: calculationResult,
           isLoading: false,
@@ -142,7 +204,6 @@ export const useCalculationStore = create<StoreState & StoreActions>(
       }
     },
 
-    // ... (ações de persistência como getSavedProjects, saveProject, etc.)
     getSavedProjects: () => {
       if (typeof window === "undefined") return [];
       const projects = localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -165,8 +226,23 @@ export const useCalculationStore = create<StoreState & StoreActions>(
       const projects = JSON.parse(
         localStorage.getItem(LOCAL_STORAGE_KEY) || "{}"
       );
-      const projectData = projects[projectName];
+      // Aqui, damos um tipo mais seguro para o objeto carregado
+      const projectData = projects[projectName] as CalculationInput;
+
       if (projectData) {
+        // Garante que a estrutura de 'details' seja um array de arrays ao carregar
+        if (!projectData.details || !Array.isArray(projectData.details)) {
+          projectData.details = Array(projectData.numPoints)
+            .fill(null)
+            .map(() => []);
+        } else {
+          // CORREÇÃO: Substituímos 'any' por um tipo mais específico.
+          // Agora esperamos que cada item seja um array de DetailInput ou nulo.
+          projectData.details = projectData.details.map(
+            (d: DetailInput[] | null) => d || []
+          );
+        }
+
         set({ input: projectData, result: null, activeTab: "data" });
         toast.success(`Projeto "${projectName}" carregado!`);
       } else {
@@ -182,7 +258,7 @@ export const useCalculationStore = create<StoreState & StoreActions>(
       toast.info(`Projeto "${projectName}" deletado.`);
     },
     resetInput: () => {
-      set({ input: initialInputState, result: null });
+      set({ input: createInitialState(4), result: null });
       toast.info("Campos de entrada foram limpos.");
     },
   })

@@ -1,13 +1,11 @@
-import { CalculationInput, CalculationResult } from "./types";
+// src/lib/calculations.ts
+
+import { CalculationInput, CalculationResult, DetailCoordinate } from "./types";
 
 const MIN_TO_DEG = 1.0 / 60.0;
 const SEC_TO_DEG = 1.0 / 3600.0;
 const toRadians = (deg: number) => (Math.PI / 180) * deg;
 
-/**
- * Converte um ângulo em GMS (Graus, Minutos, Segundos) para graus decimais.
- */
-// Tipos 'any' corrigidos para 'string | number'
 function gmsToDecimal(
   deg: string | number,
   min: string | number,
@@ -20,18 +18,19 @@ function gmsToDecimal(
   );
 }
 
-/**
- * Função principal que realiza todos os cálculos planimétricos.
- * @param data Os dados de entrada do formulário.
- * @returns Um objeto com os resultados do cálculo ou lança um erro se os dados forem inválidos.
- */
 export function calculatePlanimetry(data: CalculationInput): CalculationResult {
-  const { numPoints, angleType, initialAzimuth, initialCoordinates, vertices } =
-    data;
+  const {
+    numPoints,
+    angleType,
+    initialAzimuth,
+    initialCoordinates,
+    vertices,
+    details,
+  } = data;
 
   // 1. Conversão e Validação Inicial
   if (vertices.some((v) => v.distance === "")) {
-    throw new Error("Todas as distâncias devem ser preenchidas.");
+    throw new Error("Todas as distâncias dos vértices devem ser preenchidas.");
   }
   const initialAzimuthDecimal = gmsToDecimal(
     initialAzimuth.deg,
@@ -63,11 +62,14 @@ export function calculatePlanimetry(data: CalculationInput): CalculationResult {
   azimuths[0] = initialAzimuthDecimal;
 
   for (let i = 1; i < numPoints; i++) {
-    let nextAzimuth = azimuths[i - 1] + correctedAngles[i - 1];
+    let nextAzimuth = azimuths[i - 1] + correctedAngles[i]; // Corrigido para usar o ângulo do vértice atual
+
+    // A lógica de +/- 180 é aplicada ao ângulo para calcular o azimute de ré
     if (angleType === "internal") {
-      nextAzimuth += 180;
+      nextAzimuth = azimuths[i - 1] - 180 + correctedAngles[i - 1];
     } else {
-      nextAzimuth -= 180;
+      // external
+      nextAzimuth = azimuths[i - 1] + 180 - correctedAngles[i - 1];
     }
 
     if (nextAzimuth >= 360) nextAzimuth -= 360;
@@ -76,15 +78,13 @@ export function calculatePlanimetry(data: CalculationInput): CalculationResult {
     azimuths[i] = nextAzimuth;
   }
 
-  // 4. Cálculo das Projeções (Variações Leste e Norte)
+  // 4. Projeções e Erro Linear (sem alterações)
   const projectionsEast = distances.map(
     (dist, i) => dist * Math.sin(toRadians(azimuths[i]))
   );
   const projectionsNorth = distances.map(
     (dist, i) => dist * Math.cos(toRadians(azimuths[i]))
   );
-
-  // 5. Cálculo do Erro Linear
   const sumProjectionsEast = projectionsEast.reduce((sum, val) => sum + val, 0);
   const sumProjectionsNorth = projectionsNorth.reduce(
     (sum, val) => sum + val,
@@ -99,7 +99,7 @@ export function calculatePlanimetry(data: CalculationInput): CalculationResult {
     (dist) => (-sumProjectionsNorth / perimeter) * dist
   );
 
-  // 6. Cálculo das Coordenadas Finais
+  // 5. Coordenadas Finais (sem alterações)
   const finalCoordinates: { east: number; north: number }[] = new Array(
     numPoints
   );
@@ -118,6 +118,40 @@ export function calculatePlanimetry(data: CalculationInput): CalculationResult {
     };
   }
 
+  // 6. Cálculo das Coordenadas dos Detalhes (NOVO)
+  const detailCoordinates: DetailCoordinate[] = [];
+  details.forEach((vertexDetails, vertexIndex) => {
+    vertexDetails.forEach((detail, detailIndex) => {
+      if (detail.distance === "" || detail.angle_deg === "") return;
+
+      const stationCoord = finalCoordinates[vertexIndex];
+      const stationAzimuth = azimuths[vertexIndex];
+
+      const detailAngleDecimal = gmsToDecimal(
+        detail.angle_deg,
+        detail.angle_min,
+        detail.angle_sec
+      );
+      const detailDistance = parseFloat(detail.distance as string);
+
+      // O azimute do detalhe é o azimute da estação + o ângulo lido no detalhe
+      let detailAzimuth = stationAzimuth + detailAngleDecimal;
+      if (detailAzimuth >= 360) detailAzimuth -= 360;
+
+      const detailEast =
+        stationCoord.east + detailDistance * Math.sin(toRadians(detailAzimuth));
+      const detailNorth =
+        stationCoord.north +
+        detailDistance * Math.cos(toRadians(detailAzimuth));
+
+      detailCoordinates.push({
+        point: `P${vertexIndex + 1}-D${detailIndex + 1}`,
+        east: detailEast,
+        north: detailNorth,
+      });
+    });
+  });
+
   // 7. Montagem do Objeto de Resultado
   const totalLinearError = Math.sqrt(
     sumProjectionsEast ** 2 + sumProjectionsNorth ** 2
@@ -131,6 +165,7 @@ export function calculatePlanimetry(data: CalculationInput): CalculationResult {
       point: `P${i + 1}`,
       ...coord,
     })),
+    detailCoordinates,
     errorAnalysis: {
       angular: {
         sum: sumOfMeasuredAngles,
@@ -147,6 +182,11 @@ export function calculatePlanimetry(data: CalculationInput): CalculationResult {
         precision,
       },
       perimeter,
+    },
+    intermediate: {
+      // Adicionado para passar os dados para a UI de resultados
+      correctedAngles,
+      azimuths,
     },
   };
 }
