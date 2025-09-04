@@ -1,7 +1,10 @@
+// src/components/forms/VertexCard.tsx
+
 "use client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { useCalculationStore } from "@/store/useCalculationStore";
 import { VertexInput } from "@/lib/types";
 
@@ -9,17 +12,32 @@ interface VertexCardProps {
   vertex: VertexInput;
   index: number;
   totalPoints: number;
+  onOpenDetails: (index: number) => void; // Nova propriedade
 }
 
-export function VertexCard({ vertex, index, totalPoints }: VertexCardProps) {
-  const { updateVertexInput } = useCalculationStore();
-
+export function VertexCard({
+  vertex,
+  index,
+  totalPoints,
+  onOpenDetails, // Nova propriedade
+}: VertexCardProps) {
+  const { updateVertexInput, input } = useCalculationStore();
+  const detailCount = input.details[index]?.length || 0;
   const nextPointIndex = (index + 1) % totalPoints;
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Vértice P{index + 1}</CardTitle>
+        <div className="flex justify-between items-center">
+          <CardTitle>Vértice P{index + 1}</CardTitle>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onOpenDetails(index)}
+          >
+            Detalhes ({detailCount})
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
@@ -52,7 +70,10 @@ export function VertexCard({ vertex, index, totalPoints }: VertexCardProps) {
           </div>
         </div>
         <div>
-          <Label>Distância para P{nextPointIndex + 1} (m)</Label>
+          <Label>
+            Distância para P
+            {nextPointIndex === 0 ? totalPoints : nextPointIndex + 1} (m)
+          </Label>
           <Input
             type="number"
             placeholder="metros"

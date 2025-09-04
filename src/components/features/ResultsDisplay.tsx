@@ -1,13 +1,37 @@
+// src/components/features/ResultsDisplay.tsx
+
 "use client";
+
 import { useCalculationStore } from "@/store/useCalculationStore";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { PolygonCanvas } from "./PolygonCanvas";
+import { formatAngleToString, formatDecimal } from "@/lib/utils"; // Importar as novas funções
 
 export function ResultsDisplay() {
   const { result, isLoading, input } = useCalculationStore();
 
   if (isLoading) {
-    return <p className="text-center">Calculando...</p>;
+    return <p className="text-center animate-pulse">Calculando...</p>;
   }
 
   if (!result) {
@@ -21,72 +45,137 @@ export function ResultsDisplay() {
     );
   }
 
-  const { finalCoordinates, errorAnalysis } = result;
+  const { finalCoordinates, detailCoordinates, errorAnalysis, intermediate } =
+    result;
+  //const { vertices } = input;
 
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
           <CardTitle>Resultados para: {input.projectName}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
+          <CardDescription>
             Cliente: {input.clientName || "Não informado"}
-          </p>
-        </CardContent>
+          </CardDescription>
+        </CardHeader>
       </Card>
 
       {/* Gráfico da Poligonal */}
-      <PolygonCanvas coordinates={finalCoordinates} />
+      <PolygonCanvas
+        coordinates={finalCoordinates}
+        details={detailCoordinates}
+        azimuths={intermediate.azimuths}
+      />
 
+      {/* Tabela de Coordenadas Finais */}
       <Card>
         <CardHeader>
           <CardTitle>Coordenadas Finais</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead>
-                <tr className="border-b">
-                  <th className="p-2 font-semibold">Ponto</th>
-                  <th className="p-2 font-semibold">Leste (X)</th>
-                  <th className="p-2 font-semibold">Norte (Y)</th>
-                </tr>
-              </thead>
-              <tbody>
-                {finalCoordinates.map(({ point, east, north }) => (
-                  <tr key={point} className="border-b last:border-b-0">
-                    <td className="p-2 font-medium">{point}</td>
-                    <td className="p-2">{east.toFixed(3)}</td>
-                    <td className="p-2">{north.toFixed(3)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Ponto</TableHead>
+                <TableHead className="text-right">Leste (X)</TableHead>
+                <TableHead className="text-right">Norte (Y)</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {finalCoordinates.map(({ point, east, north }) => (
+                <TableRow key={point}>
+                  <TableCell className="font-medium">{point}</TableCell>
+                  <TableCell className="text-right">
+                    {formatDecimal(east, 3)}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {formatDecimal(north, 3)}
+                  </TableCell>
+                </TableRow>
+              ))}
+              {detailCoordinates.map(({ point, east, north }) => (
+                <TableRow key={point}>
+                  <TableCell className="font-medium pl-6 text-muted-foreground">
+                    {point}
+                  </TableCell>
+                  <TableCell className="text-right text-muted-foreground">
+                    {formatDecimal(east, 3)}
+                  </TableCell>
+                  <TableCell className="text-right text-muted-foreground">
+                    {formatDecimal(north, 3)}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
 
+      {/* Resultados Intermediários e Análise de Erros */}
       <Card>
         <CardHeader>
-          <CardTitle>Análise de Erros</CardTitle>
+          <CardTitle>Análise de Fechamento e Dados de Cálculo</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-2 text-sm">
-          <p>
-            Perímetro: <strong>{errorAnalysis.perimeter.toFixed(3)} m</strong>
-          </p>
-          <p>
-            Erro Angular Total:{" "}
-            <strong>{errorAnalysis.angular.error.toFixed(5)}°</strong>
-          </p>
-          <p>
-            Erro Linear Total:{" "}
-            <strong>{errorAnalysis.linear.totalError.toFixed(5)} m</strong>
-          </p>
-          <p>
-            Precisão do Levantamento:{" "}
-            <strong>{errorAnalysis.linear.precision}</strong>
-          </p>
+        <CardContent>
+          <Accordion type="multiple" className="w-full">
+            <AccordionItem value="item-1">
+              <AccordionTrigger>Resumo da Análise de Erros</AccordionTrigger>
+              <AccordionContent className="space-y-2 text-sm">
+                <p className="flex justify-between">
+                  <span>Perímetro:</span>{" "}
+                  <strong>{formatDecimal(errorAnalysis.perimeter, 3)} m</strong>
+                </p>
+                <p className="flex justify-between">
+                  <span>Erro Angular Total:</span>{" "}
+                  <strong>
+                    {formatAngleToString(errorAnalysis.angular.error)}
+                  </strong>
+                </p>
+                <p className="flex justify-between">
+                  <span>Correção por Vértice:</span>{" "}
+                  <strong>
+                    {formatAngleToString(errorAnalysis.angular.correction)}
+                  </strong>
+                </p>
+                <p className="flex justify-between">
+                  <span>Erro Linear Total:</span>{" "}
+                  <strong>
+                    {formatDecimal(errorAnalysis.linear.totalError, 5)} m
+                  </strong>
+                </p>
+                <p className="flex justify-between">
+                  <span>Precisão do Levantamento:</span>{" "}
+                  <strong>{errorAnalysis.linear.precision}</strong>
+                </p>
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="item-2">
+              <AccordionTrigger>Tabela de Ângulos e Azimutes</AccordionTrigger>
+              <AccordionContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Vértice</TableHead>
+                      <TableHead>Ângulo Corrigido</TableHead>
+                      <TableHead>Azimute</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {intermediate.correctedAngles.map((angle, i) => (
+                      <TableRow key={i}>
+                        <TableCell>P{i + 1}</TableCell>
+                        <TableCell>{formatAngleToString(angle)}</TableCell>
+                        <TableCell>
+                          {formatAngleToString(intermediate.azimuths[i])}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </CardContent>
       </Card>
     </div>
