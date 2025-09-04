@@ -1,0 +1,16 @@
+*   [33m1d77b3b[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeature/fase-6-refinamento-ui-ux[m[33m, [m[1;31morigin/develop[m[33m, [m[1;32mdevelop[m[33m)[m Merge branch 'fase4-reimplement' into develop
+[31m|[m[32m\[m  
+[31m|[m * [33mdc4c5e5[m fix(layout): estabiliza layout principal com header e footer fixos
+[31m|[m * [33ma2b91d0[m feat(fase5): implementa UI para salvar e carregar projetos
+[31m|[m * [33m532bacf[m feat(fase5): implementa desenho da poligonal no canvas
+[31m|[m * [33m75ad3a4[m feat(fase4): integra cálculo ao store e exibe resultados na UI
+[31m|[m * [33m0663272[m feat(fase4): integra cálculo ao store e exibe resultados na UI
+[31m|[m * [33m5b15434[m feat(fase4): define tipos de resultado e lógica de cálculo
+[31m|[m * [33mde40849[m fix(config): ajusta linting do css e remove arquivos órfãos
+[31m|[m * [33m8402af4[m feat: reimplementa formulários de entrada de dados (Fase 3)
+* [32m|[m [33mc70822e[m feat: implement data entry forms and connect to state
+[32m|[m[32m/[m  
+* [33m8362e14[m feat: setup project structure and basic layout components
+* [33m0fe447f[m refactor: simplify HomePage component and update global styles
+* [33m950421b[m[33m ([m[1;31morigin/main[m[33m, [m[1;32mmain[m[33m)[m feat: initial project structure from create-next-app
+* [33m5c22de0[m[33m ([m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m)[m Initial commit from Create Next App
