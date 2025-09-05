@@ -3,13 +3,7 @@
 "use client";
 
 import { useCalculationStore } from "@/store/useCalculationStore";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -25,7 +19,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { PolygonCanvas } from "./PolygonCanvas";
-import { formatAngleToString, formatDecimal } from "@/lib/utils"; // Importar as novas funções
+import { formatAngleToString, formatDecimal } from "@/lib/utils";
 
 export function ResultsDisplay() {
   const { result, isLoading, input } = useCalculationStore();
@@ -47,27 +41,25 @@ export function ResultsDisplay() {
 
   const { finalCoordinates, detailCoordinates, errorAnalysis, intermediate } =
     result;
-  //const { vertices } = input;
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Resultados para: {input.projectName}</CardTitle>
-          <CardDescription>
-            Cliente: {input.clientName || "Não informado"}
-          </CardDescription>
-        </CardHeader>
-      </Card>
+      {/* Informações do Projeto agora são um cabeçalho simples */}
+      <div className="text-center">
+        <h2 className="text-xl font-semibold">
+          Resultados para: {input.projectName}
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          Cliente: {input.clientName || "Não informado"}
+        </p>
+      </div>
 
-      {/* Gráfico da Poligonal */}
       <PolygonCanvas
         coordinates={finalCoordinates}
         details={detailCoordinates}
         azimuths={intermediate.azimuths}
       />
 
-      {/* Tabela de Coordenadas Finais */}
       <Card>
         <CardHeader>
           <CardTitle>Coordenadas Finais</CardTitle>
@@ -111,7 +103,6 @@ export function ResultsDisplay() {
         </CardContent>
       </Card>
 
-      {/* Resultados Intermediários e Análise de Erros */}
       <Card>
         <CardHeader>
           <CardTitle>Análise de Fechamento e Dados de Cálculo</CardTitle>

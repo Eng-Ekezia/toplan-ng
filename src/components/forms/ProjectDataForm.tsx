@@ -1,7 +1,7 @@
 // src/components/forms/ProjectDataForm.tsx
 
 "use client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card"; // Removido CardHeader e CardTitle
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCalculationStore } from "@/store/useCalculationStore";
@@ -10,13 +10,12 @@ export function ProjectDataForm() {
   const { input, setInput } = useCalculationStore();
 
   return (
+    // O Card agora não tem mais o Header
     <Card>
-      <CardHeader>
-        <CardTitle>Dados do Projeto</CardTitle>
-      </CardHeader>
-      {/* Adicionado space-y-4 para espaçamento vertical */}
-      <CardContent className="space-y-4">
-        <div>
+      <CardContent className="space-y-4 pt-6">
+        {" "}
+        {/* Adicionado pt-6 para compensar a remoção do header */}
+        <div className="space-y-2">
           <Label htmlFor="clientName">
             Nome do Cliente{" "}
             <span className="text-muted-foreground text-xs">(opcional)</span>
@@ -28,7 +27,7 @@ export function ProjectDataForm() {
             onChange={(e) => setInput("clientName", e.target.value)}
           />
         </div>
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="projectName">Nome do Projeto / Fazenda</Label>
           <Input
             id="projectName"
