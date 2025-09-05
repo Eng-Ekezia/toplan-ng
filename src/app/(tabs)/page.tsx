@@ -1,23 +1,21 @@
 // src/app/(tabs)/page.tsx
 
-"use client"; // Manter o client component para as animações
+"use client";
 import { motion } from "framer-motion";
 import { ProjectDataForm } from "@/components/forms/ProjectDataForm";
 import { PolygonDataForm } from "@/components/forms/PolygonDataForm";
 import { VertexList } from "@/components/forms/VertexList";
 
-// Variantes para a animação do contêiner principal
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.1, // Atraso entre a animação de cada item filho
+      staggerChildren: 0.1,
     },
   },
 };
 
-// Variantes para a animação de cada item (card)
 const itemVariants = {
   hidden: { y: 20, opacity: 0 },
   visible: {
@@ -29,6 +27,11 @@ const itemVariants = {
   },
 };
 
+// Componente de Título para reutilização
+const SectionTitle = ({ children }: { children: React.ReactNode }) => (
+  <h2 className="text-lg font-semibold text-center mt-4 mb-2">{children}</h2>
+);
+
 export default function DataEntryPage() {
   return (
     <motion.div
@@ -38,12 +41,17 @@ export default function DataEntryPage() {
       animate="visible"
     >
       <motion.div variants={itemVariants}>
+        <SectionTitle>Dados do Projeto</SectionTitle>
         <ProjectDataForm />
       </motion.div>
+
       <motion.div variants={itemVariants}>
+        <SectionTitle>Dados da Poligonal</SectionTitle>
         <PolygonDataForm />
       </motion.div>
+
       <motion.div variants={itemVariants}>
+        {/* O VertexList já tem o título internamente, então só precisamos dele aqui */}
         <VertexList />
       </motion.div>
     </motion.div>

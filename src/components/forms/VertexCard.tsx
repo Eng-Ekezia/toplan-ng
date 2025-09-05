@@ -39,11 +39,11 @@ export function VertexCard({
           </Button>
         </div>
       </CardHeader>
-      {/* Adicionado space-y-6 */}
-      <CardContent className="space-y-6">
-        <div>
+      {/* Adicionado space-y-4 para espaçamento vertical */}
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
           <Label>Ângulo Medido</Label>
-          <div className="grid grid-cols-3 gap-2 mt-1">
+          <div className="grid grid-cols-3 gap-2">
             <Input
               type="number"
               placeholder="G°"
@@ -70,7 +70,7 @@ export function VertexCard({
             />
           </div>
         </div>
-        <div>
+        <div className="space-y-2">
           <Label>Distância para P{nextPointLabel} (m)</Label>
           <Input
             type="number"
