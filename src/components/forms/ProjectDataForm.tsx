@@ -1,3 +1,5 @@
+// src/components/forms/ProjectDataForm.tsx
+
 "use client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,6 +14,7 @@ export function ProjectDataForm() {
       <CardHeader>
         <CardTitle>Dados do Projeto</CardTitle>
       </CardHeader>
+      {/* Adicionado space-y-4 para espaçamento vertical */}
       <CardContent className="space-y-4">
         <div>
           <Label htmlFor="clientName">

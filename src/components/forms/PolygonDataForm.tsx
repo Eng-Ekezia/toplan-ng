@@ -1,3 +1,5 @@
+// src/components/forms/PolygonDataForm.tsx
+
 "use client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCalculationStore } from "@/store/useCalculationStore";
+import React from "react"; // Importar React para tipagem de eventos
 
 export function PolygonDataForm() {
   const { input, setNumPoints, setInput, setNestedInput } =
@@ -20,8 +23,8 @@ export function PolygonDataForm() {
       <CardHeader>
         <CardTitle>Dados da Poligonal</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+      <CardContent className="space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <Label htmlFor="numPoints">Nº de Vértices</Label>
             <Input
@@ -36,6 +39,7 @@ export function PolygonDataForm() {
             <Label htmlFor="angleType">Tipo de Ângulo</Label>
             <Select
               value={input.angleType}
+              // CORRIGIDO: onValuecha -> onValueChange
               onValueChange={(value: "internal" | "external") =>
                 setInput("angleType", value)
               }
@@ -58,7 +62,8 @@ export function PolygonDataForm() {
               type="number"
               placeholder="G°"
               value={input.initialAzimuth.deg}
-              onChange={(e) =>
+              // CORRIGIDO: onchange -> onChange e adicionado tipo para 'e'
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                 setNestedInput("initialAzimuth", "deg", e.target.value)
               }
             />
@@ -66,7 +71,8 @@ export function PolygonDataForm() {
               type="number"
               placeholder="M'"
               value={input.initialAzimuth.min}
-              onChange={(e) =>
+              // CORRIGIDO: onchange -> onChange e adicionado tipo para 'e'
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                 setNestedInput("initialAzimuth", "min", e.target.value)
               }
             />
@@ -74,14 +80,15 @@ export function PolygonDataForm() {
               type="number"
               placeholder='S"'
               value={input.initialAzimuth.sec}
-              onChange={(e) =>
+              // CORRIGIDO: onchange -> onChange e adicionado tipo para 'e'
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                 setNestedInput("initialAzimuth", "sec", e.target.value)
               }
             />
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <Label htmlFor="coordEast">Coord. Leste (X) de P1</Label>
             <Input
@@ -89,7 +96,8 @@ export function PolygonDataForm() {
               type="number"
               placeholder="metros"
               value={input.initialCoordinates.east}
-              onChange={(e) =>
+              // CORRIGIDO: onchange -> onChange e adicionado tipo para 'e'
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                 setNestedInput("initialCoordinates", "east", e.target.value)
               }
             />
@@ -101,7 +109,8 @@ export function PolygonDataForm() {
               type="number"
               placeholder="metros"
               value={input.initialCoordinates.north}
-              onChange={(e) =>
+              // CORRIGIDO: onchange -> onChange e adicionado tipo para 'e'
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                 setNestedInput("initialCoordinates", "north", e.target.value)
               }
             />

@@ -1,10 +1,13 @@
+// src/components/layout/BottomNav.tsx
+
 import Link from "next/link";
 import { Pencil, BarChart3, Settings } from "lucide-react";
 
 export function BottomNav() {
   return (
-    <footer className="bg-background/80 backdrop-blur-sm fixed bottom-0 left-0 right-0 z-40 border-t">
-      <nav className="max-w-md mx-auto h-16 flex justify-around items-center">
+    // Removido: fixed, bottom-0, left-0, right-0, z-40
+    <footer className="bg-background/80 backdrop-blur-sm border-t">
+      <nav className="h-16 flex justify-around items-center">
         <Link
           href="/"
           className="flex flex-col items-center text-muted-foreground w-full p-1"
