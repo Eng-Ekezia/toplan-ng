@@ -20,12 +20,21 @@ import {
 } from "@/components/ui/accordion";
 import { PolygonCanvas } from "./PolygonCanvas";
 import { formatAngleToString, formatDecimal } from "@/lib/utils";
+import { Loader2 } from "lucide-react"; // Importar o ícone de carregamento
 
 export function ResultsDisplay() {
   const { result, isLoading, input } = useCalculationStore();
 
   if (isLoading) {
-    return <p className="text-center animate-pulse">Calculando...</p>;
+    // --- ALTERAÇÃO AQUI ---
+    // Substituído o texto por um spinner visual para melhor feedback
+    return (
+      <div className="flex flex-col items-center justify-center text-center text-muted-foreground mt-8">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <p className="mt-2 text-lg">Calculando...</p>
+        <p className="text-sm">Aguarde um momento.</p>
+      </div>
+    );
   }
 
   if (!result) {
