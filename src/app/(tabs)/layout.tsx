@@ -1,3 +1,5 @@
+// src/app/(tabs)/layout.tsx
+
 "use client";
 
 import { useEffect } from "react";
@@ -17,7 +19,6 @@ export default function TabsLayout({
   const { calculationSuccess, setCalculationSuccess, setActiveTab, activeTab } =
     useCalculationStore();
 
-  // Efeitos para navegação e sincronização (permanecem os mesmos)
   useEffect(() => {
     if (calculationSuccess) {
       router.push("/results");
@@ -36,16 +37,18 @@ export default function TabsLayout({
   }, [pathname, setActiveTab, activeTab]);
 
   return (
-    // Container principal simples, sem classes de altura ou flex.
-    <div className="max-w-md mx-auto">
+    // Container principal que organiza tudo
+    <div className="max-w-4xl mx-auto flex flex-col h-screen">
+      {/* Header não tem mais position: fixed */}
       <Header />
 
-      {/* O padding é a chave:
-        - pt-14: Deixa espaço para o Header (que tem h-14).
-        - pb-20: Deixa espaço para a BottomNav (que tem h-16) mais uma margem de segurança.
-      */}
-      <main className="pt-14 pb-20 px-4 py-4">{children}</main>
+      {/* A área de conteúdo principal que cresce e permite rolagem interna */}
+      <main className="flex-1 overflow-y-auto">
+        {/* Wrapper interno para espaçamento */}
+        <div className="px-4 md:px-6 py-4">{children}</div>
+      </main>
 
+      {/* BottomNav não tem mais position: fixed */}
       <BottomNav />
       <Toaster position="top-center" richColors />
     </div>
