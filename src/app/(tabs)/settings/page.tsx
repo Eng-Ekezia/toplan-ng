@@ -101,6 +101,7 @@ export default function SettingsPage() {
                           <Button
                             size="sm"
                             variant="destructive"
+                            aria-label={`Excluir projeto ${projectName}`}
                             onClick={() => setProjectToDelete(projectName)}
                           >
                             <FileX className="h-4 w-4" />
