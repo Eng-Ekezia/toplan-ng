@@ -20,21 +20,13 @@ import {
 } from "@/components/ui/accordion";
 import { PolygonCanvas } from "./PolygonCanvas";
 import { formatAngleToString, formatDecimal } from "@/lib/utils";
-import { Loader2 } from "lucide-react"; // Importar o ícone de carregamento
+import { Badge } from "@/components/ui/badge"; // Importar o componente Badge
 
 export function ResultsDisplay() {
   const { result, isLoading, input } = useCalculationStore();
 
   if (isLoading) {
-    // --- ALTERAÇÃO AQUI ---
-    // Substituído o texto por um spinner visual para melhor feedback
-    return (
-      <div className="flex flex-col items-center justify-center text-center text-muted-foreground mt-8">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-        <p className="mt-2 text-lg">Calculando...</p>
-        <p className="text-sm">Aguarde um momento.</p>
-      </div>
-    );
+    return <p className="text-center animate-pulse">Calculando...</p>;
   }
 
   if (!result) {
@@ -53,7 +45,6 @@ export function ResultsDisplay() {
 
   return (
     <div className="space-y-6">
-      {/* Informações do Projeto agora são um cabeçalho simples */}
       <div className="text-center">
         <h2 className="text-xl font-semibold">
           Resultados para: {input.projectName}
@@ -117,35 +108,89 @@ export function ResultsDisplay() {
           <CardTitle>Análise de Fechamento e Dados de Cálculo</CardTitle>
         </CardHeader>
         <CardContent>
-          <Accordion type="multiple" className="w-full">
+          <Accordion
+            type="multiple"
+            className="w-full"
+            defaultValue={["item-1"]}
+          >
             <AccordionItem value="item-1">
               <AccordionTrigger>Resumo da Análise de Erros</AccordionTrigger>
               <AccordionContent className="space-y-2 text-sm">
-                <p className="flex justify-between">
-                  <span>Perímetro:</span>{" "}
-                  <strong>{formatDecimal(errorAnalysis.perimeter, 3)} m</strong>
+                <p className="flex justify-between items-center">
+                  <span>Erro Angular Total:</span>
+                  <div className="flex items-center gap-2">
+                    <Badge
+                      variant={
+                        errorAnalysis.angular.isOk ? "default" : "destructive"
+                      }
+                    >
+                      {errorAnalysis.angular.isOk ? "OK" : "Fora"}
+                    </Badge>
+                    <strong>
+                      {formatAngleToString(errorAnalysis.angular.error)}
+                    </strong>
+                  </div>
                 </p>
+
                 <p className="flex justify-between">
-                  <span>Erro Angular Total:</span>{" "}
+                  <span>Tolerância Angular:</span>{" "}
                   <strong>
-                    {formatAngleToString(errorAnalysis.angular.error)}
+                    {formatAngleToString(errorAnalysis.angular.tolerance)}
                   </strong>
                 </p>
+
+                <p className="flex justify-between items-center border-t pt-2 mt-2">
+                  <span>Precisão do Levantamento:</span>
+                  <div className="flex items-center gap-2">
+                    <Badge
+                      variant={
+                        errorAnalysis.linear.isOk ? "default" : "destructive"
+                      }
+                    >
+                      {errorAnalysis.linear.isOk ? "OK" : "Fora"}
+                    </Badge>
+                    <strong>{errorAnalysis.linear.precision}</strong>
+                  </div>
+                </p>
+
                 <p className="flex justify-between">
-                  <span>Correção por Vértice:</span>{" "}
+                  <span>Tolerância Linear:</span>{" "}
                   <strong>
-                    {formatAngleToString(errorAnalysis.angular.correction)}
+                    1:{errorAnalysis.linear.tolerance.toLocaleString("pt-BR")}
                   </strong>
                 </p>
+
+                <p className="flex justify-between border-t pt-2 mt-2">
+                  <span>Somatório ΔE:</span>{" "}
+                  <strong>
+                    {formatDecimal(errorAnalysis.linear.sumEast, 5)} m
+                  </strong>
+                </p>
+
+                <p className="flex justify-between">
+                  <span>Somatório ΔN:</span>{" "}
+                  <strong>
+                    {formatDecimal(errorAnalysis.linear.sumNorth, 5)} m
+                  </strong>
+                </p>
+
                 <p className="flex justify-between">
                   <span>Erro Linear Total:</span>{" "}
                   <strong>
                     {formatDecimal(errorAnalysis.linear.totalError, 5)} m
                   </strong>
                 </p>
+
+                <p className="flex justify-between border-t pt-2 mt-2">
+                  <span>Perímetro:</span>{" "}
+                  <strong>{formatDecimal(errorAnalysis.perimeter, 3)} m</strong>
+                </p>
+
                 <p className="flex justify-between">
-                  <span>Precisão do Levantamento:</span>{" "}
-                  <strong>{errorAnalysis.linear.precision}</strong>
+                  <span>Correção por Vértice:</span>{" "}
+                  <strong>
+                    {formatAngleToString(errorAnalysis.angular.correction)}
+                  </strong>
                 </p>
               </AccordionContent>
             </AccordionItem>
@@ -173,6 +218,66 @@ export function ResultsDisplay() {
                     ))}
                   </TableBody>
                 </Table>
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="item-3">
+              <AccordionTrigger>
+                Tabela de Projeções e Correções
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Vértice</TableHead>
+                        <TableHead>ΔE</TableHead>
+                        <TableHead>ΔN</TableHead>
+                        <TableHead>Corr. E</TableHead>
+                        <TableHead>Corr. N</TableHead>
+                        <TableHead>ΔE Corr</TableHead>
+                        <TableHead>ΔN Corr</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {intermediate.correctedAngles.map((_, i) => (
+                        <TableRow key={i}>
+                          <TableCell>P{i + 1}</TableCell>
+                          <TableCell>
+                            {formatDecimal(intermediate.projectionsEast[i], 3)}
+                          </TableCell>
+                          <TableCell>
+                            {formatDecimal(intermediate.projectionsNorth[i], 3)}
+                          </TableCell>
+                          <TableCell>
+                            {formatDecimal(
+                              intermediate.linearCorrectionsEast[i],
+                              3
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {formatDecimal(
+                              intermediate.linearCorrectionsNorth[i],
+                              3
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {formatDecimal(
+                              intermediate.correctedProjectionsEast[i],
+                              3
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {formatDecimal(
+                              intermediate.correctedProjectionsNorth[i],
+                              3
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               </AccordionContent>
             </AccordionItem>
           </Accordion>

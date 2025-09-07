@@ -78,5 +78,11 @@ export interface CalculationResult {
   intermediate: {
     correctedAngles: number[];
     azimuths: number[];
+    projectionsEast: number[];
+    projectionsNorth: number[];
+    linearCorrectionsEast: number[];
+    linearCorrectionsNorth: number[];
+    correctedProjectionsEast: number[];
+    correctedProjectionsNorth: number[];
   };
 }
