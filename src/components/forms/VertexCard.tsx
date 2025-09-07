@@ -42,9 +42,10 @@ export function VertexCard({
       {/* Adicionado space-y-4 para espaçamento vertical */}
       <CardContent className="space-y-4">
         <div className="space-y-2">
-          <Label>Ângulo Medido</Label>
+          <Label htmlFor={`vertex-angle-deg-${index}`}>Ângulo Medido</Label>
           <div className="grid grid-cols-3 gap-2">
             <Input
+              id={`vertex-angle-deg-${index}`}
               type="number"
               placeholder="G°"
               value={vertex.angle_deg}
@@ -71,8 +72,11 @@ export function VertexCard({
           </div>
         </div>
         <div className="space-y-2">
-          <Label>Distância para P{nextPointLabel} (m)</Label>
+          <Label htmlFor={`vertex-distance-${index}`}>
+            Distância para P{nextPointLabel} (m)
+          </Label>
           <Input
+            id={`vertex-distance-${index}`}
             type="number"
             placeholder="metros"
             value={vertex.distance}

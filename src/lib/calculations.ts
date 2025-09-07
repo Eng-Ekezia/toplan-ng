@@ -66,10 +66,10 @@ export function calculatePlanimetry(data: CalculationInput): CalculationResult {
 
     // A lógica de +/- 180 é aplicada ao ângulo para calcular o azimute de ré
     if (angleType === "internal") {
-      nextAzimuth = azimuths[i - 1] - 180 + correctedAngles[i - 1];
+      nextAzimuth = azimuths[i - 1] - 180 + correctedAngles[i]; // Corrigido para usar o ângulo do vértice atual
     } else {
       // external
-      nextAzimuth = azimuths[i - 1] + 180 - correctedAngles[i - 1];
+      nextAzimuth = azimuths[i - 1] + 180 - correctedAngles[i]; // Corrigido para usar o ângulo do vértice atual
     }
 
     if (nextAzimuth >= 360) nextAzimuth -= 360;

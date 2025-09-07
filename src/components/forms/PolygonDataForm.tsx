@@ -54,9 +54,10 @@ export function PolygonDataForm() {
           </div>
         </div>
         <div className="space-y-2">
-          <Label>Azimute Inicial (P1 → P2)</Label>
+          <Label htmlFor="initialAzimuth_deg">Azimute Inicial (P1 → P2)</Label>
           <div className="grid grid-cols-3 gap-2">
             <Input
+              id="initialAzimuth_deg"
               type="number"
               placeholder="G°"
               value={input.initialAzimuth.deg}
