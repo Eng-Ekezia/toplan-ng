@@ -147,9 +147,16 @@ function DetailRow({
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="text-xs text-muted-foreground">Ângulo Medido</label>
+          {/* Adicionar htmlFor */}
+          <label
+            htmlFor={`detail-angle-deg-${vertexIndex}-${detailIndex}`}
+            className="text-xs text-muted-foreground"
+          >
+            Ângulo Medido
+          </label>
           <div className="grid grid-cols-3 gap-2 mt-1">
             <Input
+              id={`detail-angle-deg-${vertexIndex}-${detailIndex}`} // Adicionar id
               type="number"
               placeholder="G°"
               value={detail.angle_deg}
@@ -170,8 +177,15 @@ function DetailRow({
           </div>
         </div>
         <div>
-          <label className="text-xs text-muted-foreground">Distância (m)</label>
+          {/* Adicionar htmlFor */}
+          <label
+            htmlFor={`detail-distance-${vertexIndex}-${detailIndex}`}
+            className="text-xs text-muted-foreground"
+          >
+            Distância (m)
+          </label>
           <Input
+            id={`detail-distance-${vertexIndex}-${detailIndex}`} // Adicionar id
             type="number"
             placeholder="metros"
             className="mt-1"
