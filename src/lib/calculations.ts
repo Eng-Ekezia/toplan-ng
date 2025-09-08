@@ -29,6 +29,7 @@ export function calculatePlanimetry(data: CalculationInput): CalculationResult {
   } = data;
 
   // 1. Conversão e Validação Inicial
+  // ... (sem alterações)
   if (vertices.some((v) => v.distance === "")) {
     throw new Error("Todas as distâncias dos vértices devem ser preenchidas.");
   }
@@ -62,23 +63,23 @@ export function calculatePlanimetry(data: CalculationInput): CalculationResult {
   azimuths[0] = initialAzimuthDecimal;
 
   for (let i = 1; i < numPoints; i++) {
-    let nextAzimuth = azimuths[i - 1] + correctedAngles[i]; // Corrigido para usar o ângulo do vértice atual
+    let nextAzimuth;
+    const backAzimuth = azimuths[i - 1] + 180;
 
-    // A lógica de +/- 180 é aplicada ao ângulo para calcular o azimute de ré
     if (angleType === "internal") {
-      nextAzimuth = azimuths[i - 1] - 180 + correctedAngles[i]; // Corrigido para usar o ângulo do vértice atual
+      nextAzimuth = backAzimuth + correctedAngles[i];
     } else {
       // external
-      nextAzimuth = azimuths[i - 1] + 180 - correctedAngles[i]; // Corrigido para usar o ângulo do vértice atual
+      nextAzimuth = backAzimuth - correctedAngles[i];
     }
 
-    if (nextAzimuth >= 360) nextAzimuth -= 360;
+    nextAzimuth %= 360;
     if (nextAzimuth < 0) nextAzimuth += 360;
 
     azimuths[i] = nextAzimuth;
   }
 
-  // 4. Projeções e Erro Linear (sem alterações)
+  // 4. Projeções e Erro Linear
   const projectionsEast = distances.map(
     (dist, i) => dist * Math.sin(toRadians(azimuths[i]))
   );
@@ -99,7 +100,14 @@ export function calculatePlanimetry(data: CalculationInput): CalculationResult {
     (dist) => (-sumProjectionsNorth / perimeter) * dist
   );
 
-  // 5. Coordenadas Finais (sem alterações)
+  const correctedProjectionsEast = projectionsEast.map(
+    (proj, i) => proj + linearCorrectionsEast[i]
+  );
+  const correctedProjectionsNorth = projectionsNorth.map(
+    (proj, i) => proj + linearCorrectionsNorth[i]
+  );
+
+  // 5. Coordenadas Finais
   const finalCoordinates: { east: number; north: number }[] = new Array(
     numPoints
   );
@@ -107,25 +115,21 @@ export function calculatePlanimetry(data: CalculationInput): CalculationResult {
 
   for (let i = 1; i < numPoints; i++) {
     finalCoordinates[i] = {
-      east:
-        finalCoordinates[i - 1].east +
-        projectionsEast[i - 1] +
-        linearCorrectionsEast[i - 1],
-      north:
-        finalCoordinates[i - 1].north +
-        projectionsNorth[i - 1] +
-        linearCorrectionsNorth[i - 1],
+      east: finalCoordinates[i - 1].east + correctedProjectionsEast[i - 1],
+      north: finalCoordinates[i - 1].north + correctedProjectionsNorth[i - 1],
     };
   }
 
-  // 6. Cálculo das Coordenadas dos Detalhes (NOVO)
+  // 6. Cálculo das Coordenadas dos Detalhes
   const detailCoordinates: DetailCoordinate[] = [];
   details.forEach((vertexDetails, vertexIndex) => {
     vertexDetails.forEach((detail, detailIndex) => {
       if (detail.distance === "" || detail.angle_deg === "") return;
 
       const stationCoord = finalCoordinates[vertexIndex];
-      const stationAzimuth = azimuths[vertexIndex];
+
+      const previousVertexIndex = (vertexIndex - 1 + numPoints) % numPoints;
+      const backAzimuthBase = azimuths[previousVertexIndex] + 180;
 
       const detailAngleDecimal = gmsToDecimal(
         detail.angle_deg,
@@ -134,9 +138,10 @@ export function calculatePlanimetry(data: CalculationInput): CalculationResult {
       );
       const detailDistance = parseFloat(detail.distance as string);
 
-      // O azimute do detalhe é o azimute da estação + o ângulo lido no detalhe
-      let detailAzimuth = stationAzimuth + detailAngleDecimal;
-      if (detailAzimuth >= 360) detailAzimuth -= 360;
+      let detailAzimuth = backAzimuthBase + detailAngleDecimal;
+
+      detailAzimuth %= 360;
+      if (detailAzimuth < 0) detailAzimuth += 360;
 
       const detailEast =
         stationCoord.east + detailDistance * Math.sin(toRadians(detailAzimuth));
@@ -152,13 +157,22 @@ export function calculatePlanimetry(data: CalculationInput): CalculationResult {
     });
   });
 
-  // 7. Montagem do Objeto de Resultado
+  // 7. Montagem do Objeto de Resultado e Tolerâncias
   const totalLinearError = Math.sqrt(
     sumProjectionsEast ** 2 + sumProjectionsNorth ** 2
   );
-  const precision = `1:${Math.round(
-    perimeter / totalLinearError
-  ).toLocaleString("pt-BR")}`;
+  const precisionDenominator = perimeter / totalLinearError;
+  const precision = `1:${Math.round(precisionDenominator).toLocaleString(
+    "pt-BR"
+  )}`;
+
+  // Cálculo de tolerâncias
+  const angularToleranceInSeconds = 30 * Math.sqrt(numPoints) + 10;
+  const angularToleranceInDecimal = angularToleranceInSeconds * SEC_TO_DEG;
+  const isAngularOk = Math.abs(angularError) <= angularToleranceInDecimal;
+
+  const linearTolerance = 12000;
+  const isLinearOk = precisionDenominator >= linearTolerance;
 
   return {
     finalCoordinates: finalCoordinates.map((coord, i) => ({
@@ -172,6 +186,8 @@ export function calculatePlanimetry(data: CalculationInput): CalculationResult {
         expected: expectedAngleSum,
         error: angularError,
         correction: angularCorrection,
+        tolerance: angularToleranceInDecimal,
+        isOk: isAngularOk,
       },
       linear: {
         sumEast: sumProjectionsEast,
@@ -180,13 +196,20 @@ export function calculatePlanimetry(data: CalculationInput): CalculationResult {
         errorNorth: -sumProjectionsNorth,
         totalError: totalLinearError,
         precision,
+        tolerance: linearTolerance,
+        isOk: isLinearOk,
       },
       perimeter,
     },
     intermediate: {
-      // Adicionado para passar os dados para a UI de resultados
       correctedAngles,
       azimuths,
+      projectionsEast,
+      projectionsNorth,
+      linearCorrectionsEast,
+      linearCorrectionsNorth,
+      correctedProjectionsEast,
+      correctedProjectionsNorth,
     },
   };
 }

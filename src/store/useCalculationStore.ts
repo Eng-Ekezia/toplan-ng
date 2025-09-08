@@ -75,6 +75,8 @@ interface StoreActions {
   getSavedProjects: () => string[];
   deleteProject: (projectName: string) => void;
   resetInput: () => void;
+  exportProject: () => void;
+  importProject: (file: File) => void; // Adicionado
 }
 
 export const useCalculationStore = create<StoreState & StoreActions>(
@@ -257,6 +259,91 @@ export const useCalculationStore = create<StoreState & StoreActions>(
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(projects));
       toast.info(`Projeto "${projectName}" deletado.`);
     },
+
+    exportProject: () => {
+      const { input } = get();
+      if (!input.projectName.trim()) {
+        toast.error("Adicione um nome ao projeto para poder exportá-lo.");
+        return;
+      }
+
+      try {
+        const jsonString = JSON.stringify(input, null, 2);
+        const blob = new Blob([jsonString], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        // Sanitiza o nome do projeto para ser usado como nome de arquivo
+        const fileName = `${input.projectName
+          .replace(/[^a-z0-9]/gi, "_")
+          .toLowerCase()}.json`;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        toast.success(`Projeto "${input.projectName}" exportado com sucesso!`);
+      } catch (error) {
+        toast.error("Ocorreu um erro ao exportar o projeto.");
+        console.error("Erro ao exportar projeto:", error);
+      }
+    },
+
+    importProject: (file) => {
+      const reader = new FileReader();
+
+      reader.onload = (event) => {
+        try {
+          const text = event.target?.result;
+          if (typeof text !== "string") {
+            throw new Error("Falha ao ler o arquivo.");
+          }
+
+          const projectData = JSON.parse(text) as CalculationInput;
+
+          // Validação simples para garantir que o objeto tem as chaves esperadas
+          if (
+            !projectData.projectName ||
+            !projectData.vertices ||
+            !projectData.numPoints
+          ) {
+            throw new Error(
+              "Arquivo JSON inválido ou não corresponde ao formato esperado."
+            );
+          }
+
+          // Garante que a estrutura de 'details' seja um array de arrays ao carregar
+          if (!projectData.details || !Array.isArray(projectData.details)) {
+            projectData.details = Array(projectData.numPoints)
+              .fill(null)
+              .map(() => []);
+          } else {
+            projectData.details = projectData.details.map(
+              (d: DetailInput[] | null) => d || []
+            );
+          }
+
+          set({ input: projectData, result: null, activeTab: "data" });
+          toast.success(
+            `Projeto "${projectData.projectName}" importado com sucesso!`
+          );
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error
+              ? error.message
+              : "Ocorreu um erro desconhecido ao importar o projeto.";
+          toast.error(errorMessage);
+          console.error("Erro ao importar projeto:", error);
+        }
+      };
+
+      reader.onerror = () => {
+        toast.error("Não foi possível ler o arquivo selecionado.");
+      };
+
+      reader.readAsText(file);
+    },
+
     resetInput: () => {
       set({ input: createInitialState(4), result: null });
       toast.info("Campos de entrada foram limpos.");

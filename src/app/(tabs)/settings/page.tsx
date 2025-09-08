@@ -2,12 +2,19 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react"; // Adicionado useRef
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useCalculationStore } from "@/store/useCalculationStore";
-import { Save, FilePlus, FolderUp, FileX } from "lucide-react";
-// --- ALTERAÇÃO AQUI: Importar componentes do AlertDialog ---
+// --- ALTERAÇÃO AQUI: Importar o ícone Upload ---
+import {
+  Save,
+  FilePlus,
+  FolderUp,
+  FileX,
+  Download,
+  Upload,
+} from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,27 +39,44 @@ export default function SettingsPage() {
     getSavedProjects,
     loadProject,
     deleteProject,
+    exportProject,
+    importProject, // --- ALTERAÇÃO AQUI: Obter a função de importação ---
   } = useCalculationStore();
 
   const [savedProjects, setSavedProjects] = useState<string[]>([]);
-  // --- ALTERAÇÃO AQUI: Estado para controlar qual projeto deletar ---
   const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null); // --- ALTERAÇÃO AQUI: Criar ref para o input de arquivo ---
 
   useEffect(() => {
     setSavedProjects(getSavedProjects());
   }, [getSavedProjects]);
 
-  // --- ALTERAÇÃO AQUI: A função agora é chamada pelo botão de confirmação no diálogo ---
   const handleDeleteProject = () => {
     if (projectToDelete) {
       deleteProject(projectToDelete);
       setSavedProjects(getSavedProjects());
-      setProjectToDelete(null); // Limpa o estado após a exclusão
+      setProjectToDelete(null);
     }
   };
 
+  // --- ALTERAÇÃO AQUI: Função para lidar com a seleção do arquivo ---
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      importProject(file);
+    }
+    // Resetar o valor do input para permitir selecionar o mesmo arquivo novamente
+    if (event.target) {
+      event.target.value = "";
+    }
+  };
+
+  // --- ALTERAÇÃO AQUI: Função para acionar o clique no input de arquivo ---
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
   return (
-    // Envolvemos todo o conteúdo em AlertDialog para poder usar seu Trigger
     <AlertDialog>
       <div className="space-y-6">
         <h1 className="text-xl font-semibold text-center">
@@ -66,6 +90,32 @@ export default function SettingsPage() {
               <Button onClick={saveProject} className="w-full">
                 <Save className="mr-2 h-4 w-4" />
                 Salvar Projeto Atual
+              </Button>
+
+              {/* --- ALTERAÇÃO AQUI: Botão de Importar e input de arquivo escondido --- */}
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept=".json"
+                onChange={handleFileChange}
+              />
+              <Button
+                onClick={handleImportClick}
+                variant="outline"
+                className="w-full"
+              >
+                <Upload className="mr-2 h-4 w-4" />
+                Importar Projeto de Arquivo
+              </Button>
+
+              <Button
+                onClick={exportProject}
+                variant="outline"
+                className="w-full"
+              >
+                <Download className="mr-2 h-4 w-4" />
+                Exportar Projeto para Arquivo
               </Button>
               <Button onClick={resetInput} variant="outline" className="w-full">
                 <FilePlus className="mr-2 h-4 w-4" />
@@ -96,7 +146,6 @@ export default function SettingsPage() {
                           <FolderUp className="mr-2 h-4 w-4" />
                           Carregar
                         </Button>
-                        {/* --- ALTERAÇÃO AQUI: O botão de deletar agora é um gatilho para o diálogo --- */}
                         <AlertDialogTrigger asChild>
                           <Button
                             size="sm"
@@ -121,7 +170,6 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* --- ALTERAÇÃO AQUI: Conteúdo do diálogo de confirmação --- */}
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
