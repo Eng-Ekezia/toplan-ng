@@ -217,41 +217,29 @@ export function PolygonCanvas({
       <CardHeader>
         <CardTitle>Gráfico da Poligonal</CardTitle>
       </CardHeader>
-      {/* --- ALTERAÇÃO PRINCIPAL AQUI --- */}
-      {/* A classe "relative" foi movida para o CardContent */}
-      {/* O div extra foi removido */}
-      <CardContent className="relative p-2 md:p-6">
-        <canvas
-          ref={canvasRef}
-          width={800}
-          height={600}
-          className="w-full aspect-video border rounded-md bg-white cursor-grab active:cursor-grabbing touch-none"
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUpOrLeave}
-          onMouseLeave={handleMouseUpOrLeave}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-        />
-        {/* As classes de posicionamento foram ajustadas para o novo contêiner */}
-        <div className="absolute top-4 right-4 flex flex-col gap-1">
-          <Button
-            size="icon"
-            variant="outline"
-            onClick={handleZoomIn}
-            className="h-8 w-8 bg-background/50 backdrop-blur-sm"
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
-          <Button
-            size="icon"
-            variant="outline"
-            onClick={handleZoomOut}
-            className="h-8 w-8 bg-background/50 backdrop-blur-sm"
-          >
-            <Minus className="h-4 w-4" />
-          </Button>
+      <CardContent>
+        <div className="relative">
+          <canvas
+            ref={canvasRef}
+            width={800}
+            height={600}
+            className="w-full aspect-video border rounded-md bg-card cursor-grab active:cursor-grabbing touch-none"
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUpOrLeave}
+            onMouseLeave={handleMouseUpOrLeave}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          />
+          <div className="absolute top-2 right-2 flex flex-col gap-1">
+            <Button size="icon" onClick={handleZoomIn} className="h-8 w-8">
+              <Plus className="h-4 w-4" />
+            </Button>
+            <Button size="icon" onClick={handleZoomOut} className="h-8 w-8">
+              <Minus className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>

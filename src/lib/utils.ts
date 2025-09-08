@@ -2,16 +2,26 @@
 
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { CalculationInput, CalculationResult } from "./types";
+import {
+  CalculationInput,
+  CalculationResult,
+  DetailCoordinate,
+  FinalCoordinate,
+} from "./types";
 import { toast } from "sonner";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+
+interface jsPDFWithAutoTable extends jsPDF {
+  lastAutoTable: {
+    finalY: number;
+  };
+}
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-// ... (as outras funções formatDecimal, formatAngleToString, etc., permanecem as mesmas)
 export function formatAngleToString(
   decimal: number | undefined | null
 ): string {
@@ -119,53 +129,65 @@ export function exportResultsToPDF(
     return;
   }
   try {
-    const doc = new jsPDF();
+    const doc = new jsPDF() as jsPDFWithAutoTable;
+    const pageWidth = doc.internal.pageSize.width;
+    const primaryColor = "#2563eb";
     let y = 15;
 
+    doc.setFont("Times", "normal");
+
     doc.setFontSize(18);
-    doc.text("Relatório de Cálculo Planimétrico", 105, y, { align: "center" });
-    y += 10;
-    doc.setFontSize(12);
-    doc.text(`Projeto: ${input.projectName}`, 15, y);
-    y += 7;
-    doc.text(`Cliente: ${input.clientName || "Não informado"}`, 15, y);
+    doc.setTextColor(primaryColor);
+    doc.text("Relatório de Cálculo Planimétrico", pageWidth / 2, y, {
+      align: "center",
+    });
+    y += 8;
+
+    doc.setFontSize(10);
+    doc.setTextColor(40);
+    doc.text(`Projeto: ${input.projectName}`, 14, y);
+    doc.text(
+      `Cliente: ${input.clientName || "Não informado"}`,
+      pageWidth - 14,
+      y,
+      { align: "right" }
+    );
     y += 10;
 
-    doc.setFontSize(14);
-    doc.text("Coordenadas Finais", 15, y);
-    y += 5;
-    const coordHeaders = [["Ponto", "Leste (X)", "Norte (Y)"]];
-    const coordRows = [
+    doc.setFontSize(12);
+    doc.setTextColor(primaryColor);
+    doc.text("Coordenadas Finais", 14, y);
+    y += 6;
+
+    const allCoordinates = [
       ...result.finalCoordinates,
       ...result.detailCoordinates,
-    ].map((c) => [
+    ];
+    const coordBody = allCoordinates.map((c) => [
       c.point,
       formatDecimal(c.east, 3),
       formatDecimal(c.north, 3),
     ]);
 
-    // --- CORREÇÃO FINAL AQUI ---
-    // Usamos a função 'autoTable' diretamente com a instância 'doc'
     autoTable(doc, {
-      head: coordHeaders,
-      body: coordRows,
+      head: [["Ponto", "Leste (X)", "Norte (Y)"]],
+      body: coordBody,
       startY: y,
       theme: "striped",
-      headStyles: { fillColor: [41, 128, 185] },
+      headStyles: {
+        fillColor: primaryColor,
+        textColor: 255,
+        fontSize: 8,
+        fontStyle: "bold",
+      },
+      styles: { fontSize: 7, cellPadding: 1.5, font: "Times" },
     });
-    y = (doc as any).lastAutoTable.finalY + 10;
+    y = doc.lastAutoTable.finalY + 7;
 
-    const pageHeight = doc.internal.pageSize.height;
-    const checkPageBreak = (spaceNeeded: number) => {
-      if (y + spaceNeeded > pageHeight - 15) {
-        doc.addPage();
-        y = 15;
-      }
-    };
-    checkPageBreak(60);
-    doc.setFontSize(14);
-    doc.text("Análise de Fechamento", 15, y);
-    y += 5;
+    doc.setFontSize(12);
+    doc.setTextColor(primaryColor);
+    doc.text("Análise de Fechamento", 14, y);
+    y += 6;
     const errorBody = [
       [
         "Erro Angular Total",
@@ -190,27 +212,61 @@ export function exportResultsToPDF(
       body: errorBody,
       startY: y,
       theme: "grid",
+      styles: { fontSize: 7, cellPadding: 1.5, font: "Times" },
+      columnStyles: { 0: { fontStyle: "bold", cellWidth: 50 } },
     });
-    y = (doc as any).lastAutoTable.finalY + 10;
+    y = doc.lastAutoTable.finalY + 7;
 
-    checkPageBreak(50);
-    doc.setFontSize(14);
-    doc.text("Ângulos e Azimutes", 15, y);
-    y += 5;
-    const azHeaders = [["Vértice", "Ângulo Corrigido", "Azimute"]];
-    const azRows = result.intermediate.correctedAngles.map((angle, i) => [
+    const leftTableY = y;
+    const azBody = result.intermediate.correctedAngles.map((angle, i) => [
       `P${i + 1}`,
       formatAngleToString(angle),
       formatAngleToString(result.intermediate.azimuths[i]),
     ]);
     autoTable(doc, {
-      head: azHeaders,
-      body: azRows,
-      startY: y,
+      head: [["Vértice", "Ângulo Corrigido", "Azimute"]],
+      body: azBody,
+      startY: leftTableY,
       theme: "striped",
-      headStyles: { fillColor: [41, 128, 185] },
+      headStyles: {
+        fillColor: primaryColor,
+        textColor: 255,
+        fontSize: 8,
+        fontStyle: "bold",
+      },
+      styles: { fontSize: 7, cellPadding: 1.5, font: "Times" },
+      tableWidth: (pageWidth - 32) / 2,
+      margin: { left: 14 },
     });
-    y = (doc as any).lastAutoTable.finalY + 10;
+
+    const projBody = result.intermediate.correctedAngles.map((_, i) => [
+      `P${i + 1}`,
+      formatDecimal(result.intermediate.correctedProjectionsEast[i], 3),
+      formatDecimal(result.intermediate.correctedProjectionsNorth[i], 3),
+    ]);
+    autoTable(doc, {
+      head: [["Vértice", "ΔE Corrigida", "ΔN Corrigida"]],
+      body: projBody,
+      startY: leftTableY,
+      theme: "striped",
+      headStyles: {
+        fillColor: primaryColor,
+        textColor: 255,
+        fontSize: 8,
+        fontStyle: "bold",
+      },
+      styles: { fontSize: 7, cellPadding: 1.5, font: "Times" },
+      tableWidth: (pageWidth - 32) / 2,
+      margin: { left: 14 + (pageWidth - 28) / 2 },
+    });
+
+    doc.addPage();
+    drawPolygonOnPDF(
+      doc,
+      result.finalCoordinates,
+      result.detailCoordinates,
+      result.intermediate.azimuths
+    );
 
     const fileName = `${input.projectName
       .replace(/[^a-z0-9]/gi, "_")
@@ -221,4 +277,89 @@ export function exportResultsToPDF(
     toast.error("Ocorreu um erro ao gerar o relatório PDF.");
     console.error("Erro ao exportar PDF:", error);
   }
+}
+
+function drawPolygonOnPDF(
+  doc: jsPDF,
+  coordinates: FinalCoordinate[],
+  details: DetailCoordinate[],
+  azimuths: number[]
+) {
+  const pageWidth = doc.internal.pageSize.width;
+  const pageHeight = doc.internal.pageSize.height;
+  const padding = 20;
+  const primaryColor = "#2563eb";
+
+  if (coordinates.length === 0) return;
+
+  const allCoords = [...coordinates, ...details];
+  let minX = allCoords[0].east,
+    maxX = allCoords[0].east,
+    minY = allCoords[0].north,
+    maxY = allCoords[0].north;
+
+  allCoords.forEach((c) => {
+    if (c.east < minX) minX = c.east;
+    if (c.east > maxX) maxX = c.east;
+    if (c.north < minY) minY = c.north;
+    if (c.north > maxY) maxY = c.north;
+  });
+
+  const dataWidth = maxX - minX;
+  const dataHeight = maxY - minY;
+
+  const scaleX = dataWidth === 0 ? 1 : (pageWidth - padding * 2) / dataWidth;
+  const scaleY = dataHeight === 0 ? 1 : (pageHeight - padding * 2) / dataHeight;
+  const scale = Math.min(scaleX, scaleY) * 0.9;
+
+  const transform = (east: number, north: number) => {
+    const x = (east - minX) * scale;
+    const y = (north - minY) * scale;
+    const finalX = x + (pageWidth - dataWidth * scale) / 2;
+    const finalY =
+      pageHeight - padding - y - (pageHeight - dataHeight * scale) / 2;
+    return { x: finalX, y: finalY };
+  };
+
+  doc.setDrawColor(primaryColor);
+  doc.setLineWidth(0.5);
+  if (coordinates.length > 1) {
+    const points = coordinates.map((c) => transform(c.east, c.north));
+    // Adiciona o primeiro ponto ao final para fechar o polígono
+    points.push(points[0]);
+
+    for (let i = 0; i < points.length - 1; i++) {
+      doc.line(points[i].x, points[i].y, points[i + 1].x, points[i + 1].y);
+    }
+  }
+
+  coordinates.forEach((coord, i) => {
+    const p = transform(coord.east, coord.north);
+
+    doc.setFillColor("#1f2937");
+    doc.circle(p.x, p.y, 1.5, "F");
+    doc.setFontSize(8);
+    doc.setTextColor("#1f2937");
+    doc.text(coord.point, p.x + 3, p.y + 1.5);
+
+    if (azimuths[i] !== undefined) {
+      const nextPointIndex = (i + 1) % coordinates.length;
+      const p2 = transform(
+        coordinates[nextPointIndex].east,
+        coordinates[nextPointIndex].north
+      );
+      doc.setDrawColor("#ef4444");
+      doc.setLineWidth(0.2);
+      doc.line(p.x, p.y, p2.x, p2.y);
+    }
+  });
+
+  details.forEach((detail) => {
+    const p = transform(detail.east, detail.north);
+    doc.setFillColor("#10b981");
+    doc.circle(p.x, p.y, 1, "F");
+    doc.setFontSize(6);
+    doc.setTextColor("#4b5563");
+    doc.text(detail.point, p.x + 3, p.y + 1);
+  });
 }
