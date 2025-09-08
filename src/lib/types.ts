@@ -57,6 +57,8 @@ export interface ErrorAnalysis {
     expected: number;
     error: number;
     correction: number;
+    tolerance: number; // Adicionada
+    isOk: boolean; // Adicionada
   };
   linear: {
     sumEast: number;
@@ -65,6 +67,8 @@ export interface ErrorAnalysis {
     errorNorth: number;
     totalError: number;
     precision: string;
+    tolerance: number; // Adicionada
+    isOk: boolean; // Adicionada
   };
   perimeter: number;
 }
