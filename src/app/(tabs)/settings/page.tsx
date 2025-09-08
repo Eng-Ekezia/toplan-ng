@@ -2,11 +2,11 @@
 
 "use client";
 
-import { useState, useEffect, useRef } from "react"; // Adicionado useRef
+import { useState, useEffect, useRef } from "react";
+import { motion } from "framer-motion"; // Importar motion
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useCalculationStore } from "@/store/useCalculationStore";
-// --- ALTERAÇÃO AQUI: Importar o ícone Upload ---
 import {
   Save,
   FilePlus,
@@ -27,7 +27,28 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-// Componente de Título para reutilização e consistência
+// Variantes de animação
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: {
+      duration: 0.3,
+    },
+  },
+};
+
 const SectionTitle = ({ children }: { children: React.ReactNode }) => (
   <h2 className="text-lg font-semibold text-center mb-2">{children}</h2>
 );
@@ -40,12 +61,15 @@ export default function SettingsPage() {
     loadProject,
     deleteProject,
     exportProject,
-    importProject, // --- ALTERAÇÃO AQUI: Obter a função de importação ---
+    importProject,
+    exportResultsToCSV,
+    exportResultsToPDF,
+    result,
   } = useCalculationStore();
 
   const [savedProjects, setSavedProjects] = useState<string[]>([]);
   const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null); // --- ALTERAÇÃO AQUI: Criar ref para o input de arquivo ---
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setSavedProjects(getSavedProjects());
@@ -59,31 +83,36 @@ export default function SettingsPage() {
     }
   };
 
-  // --- ALTERAÇÃO AQUI: Função para lidar com a seleção do arquivo ---
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       importProject(file);
     }
-    // Resetar o valor do input para permitir selecionar o mesmo arquivo novamente
     if (event.target) {
       event.target.value = "";
     }
   };
 
-  // --- ALTERAÇÃO AQUI: Função para acionar o clique no input de arquivo ---
   const handleImportClick = () => {
     fileInputRef.current?.click();
   };
 
   return (
     <AlertDialog>
-      <div className="space-y-6">
-        <h1 className="text-xl font-semibold text-center">
+      <motion.div
+        className="space-y-6"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <motion.h1
+          variants={itemVariants}
+          className="text-xl font-semibold text-center"
+        >
           Ajustes e Gerenciamento
-        </h1>
+        </motion.h1>
 
-        <div className="space-y-4">
+        <motion.div variants={itemVariants} className="space-y-4">
           <SectionTitle>Ações Rápidas</SectionTitle>
           <Card>
             <CardContent className="space-y-4 pt-6">
@@ -92,7 +121,6 @@ export default function SettingsPage() {
                 Salvar Projeto Atual
               </Button>
 
-              {/* --- ALTERAÇÃO AQUI: Botão de Importar e input de arquivo escondido --- */}
               <input
                 type="file"
                 ref={fileInputRef}
@@ -106,7 +134,7 @@ export default function SettingsPage() {
                 className="w-full"
               >
                 <Upload className="mr-2 h-4 w-4" />
-                Importar Projeto de Arquivo
+                Importar Projeto (JSON)
               </Button>
 
               <Button
@@ -115,17 +143,36 @@ export default function SettingsPage() {
                 className="w-full"
               >
                 <Download className="mr-2 h-4 w-4" />
-                Exportar Projeto para Arquivo
+                Exportar Projeto (JSON)
               </Button>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={exportResultsToCSV}
+                disabled={!result}
+              >
+                <Download className="mr-2 h-4 w-4" />
+                Exportar Resultados (CSV)
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={exportResultsToPDF}
+                disabled={!result}
+              >
+                <Download className="mr-2 h-4 w-4" />
+                Exportar Relatório (PDF)
+              </Button>
+
               <Button onClick={resetInput} variant="outline" className="w-full">
                 <FilePlus className="mr-2 h-4 w-4" />
                 Novo Projeto (Limpar Formulário)
               </Button>
             </CardContent>
           </Card>
-        </div>
+        </motion.div>
 
-        <div className="space-y-4">
+        <motion.div variants={itemVariants} className="space-y-4">
           <SectionTitle>Projetos Salvos</SectionTitle>
           <Card>
             <CardContent className="pt-6">
@@ -167,8 +214,8 @@ export default function SettingsPage() {
               )}
             </CardContent>
           </Card>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       <AlertDialogContent>
         <AlertDialogHeader>

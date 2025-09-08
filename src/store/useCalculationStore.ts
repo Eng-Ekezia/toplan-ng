@@ -9,6 +9,12 @@ import {
 } from "@/lib/types";
 import { calculatePlanimetry } from "@/lib/calculations";
 import { toast } from "sonner";
+// --- ALTERAÇÃO AQUI: Importar a nova função de exportação de PDF ---
+import {
+  exportInputToJSON,
+  exportResultsToCSV,
+  exportResultsToPDF,
+} from "@/lib/utils";
 
 const createInitialState = (numPoints: number): CalculationInput => ({
   projectName: "",
@@ -23,7 +29,6 @@ const createInitialState = (numPoints: number): CalculationInput => ({
     angle_sec: "",
     distance: "",
   }),
-  // Inicializa o array de detalhes com um subarray para cada vértice
   details: Array(numPoints)
     .fill(null)
     .map(() => []),
@@ -57,7 +62,6 @@ interface StoreActions {
     field: keyof VertexInput,
     value: string | number
   ) => void;
-  // Ações para detalhes
   addDetail: (vertexIndex: number) => void;
   removeDetail: (vertexIndex: number, detailIndex: number) => void;
   updateDetailInput: (
@@ -76,7 +80,10 @@ interface StoreActions {
   deleteProject: (projectName: string) => void;
   resetInput: () => void;
   exportProject: () => void;
-  importProject: (file: File) => void; // Adicionado
+  importProject: (file: File) => void;
+  exportResultsToCSV: () => void;
+  // --- ALTERAÇÃO AQUI: Adicionar a nova ação ---
+  exportResultsToPDF: () => void;
 }
 
 export const useCalculationStore = create<StoreState & StoreActions>(
@@ -87,6 +94,7 @@ export const useCalculationStore = create<StoreState & StoreActions>(
     activeTab: "data",
     calculationSuccess: false,
 
+    // ... (outras funções do store permanecem iguais)
     setInput: (field, value) =>
       set((state) => ({ input: { ...state.input, [field]: value } })),
 
@@ -114,7 +122,6 @@ export const useCalculationStore = create<StoreState & StoreActions>(
               distance: "",
             }
         );
-      // Garante que o array de detalhes tenha o mesmo tamanho que o de vértices
       const newDetails: DetailInput[][] = Array(numPoints)
         .fill(null)
         .map((_, i) => currentInput.details[i] || []);
@@ -144,7 +151,6 @@ export const useCalculationStore = create<StoreState & StoreActions>(
         };
       }),
 
-    // Implementação das ações para detalhes
     addDetail: (vertexIndex) =>
       set((state) => {
         const newDetails = [...state.input.details];
@@ -228,18 +234,14 @@ export const useCalculationStore = create<StoreState & StoreActions>(
       const projects = JSON.parse(
         localStorage.getItem(LOCAL_STORAGE_KEY) || "{}"
       );
-      // Aqui, damos um tipo mais seguro para o objeto carregado
       const projectData = projects[projectName] as CalculationInput;
 
       if (projectData) {
-        // Garante que a estrutura de 'details' seja um array de arrays ao carregar
         if (!projectData.details || !Array.isArray(projectData.details)) {
           projectData.details = Array(projectData.numPoints)
             .fill(null)
             .map(() => []);
         } else {
-          // CORREÇÃO: Substituímos 'any' por um tipo mais específico.
-          // Agora esperamos que cada item seja um array de DetailInput ou nulo.
           projectData.details = projectData.details.map(
             (d: DetailInput[] | null) => d || []
           );
@@ -261,47 +263,29 @@ export const useCalculationStore = create<StoreState & StoreActions>(
     },
 
     exportProject: () => {
-      const { input } = get();
-      if (!input.projectName.trim()) {
-        toast.error("Adicione um nome ao projeto para poder exportá-lo.");
-        return;
-      }
+      exportInputToJSON(get().input);
+    },
 
-      try {
-        const jsonString = JSON.stringify(input, null, 2);
-        const blob = new Blob([jsonString], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        // Sanitiza o nome do projeto para ser usado como nome de arquivo
-        const fileName = `${input.projectName
-          .replace(/[^a-z0-9]/gi, "_")
-          .toLowerCase()}.json`;
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-        toast.success(`Projeto "${input.projectName}" exportado com sucesso!`);
-      } catch (error) {
-        toast.error("Ocorreu um erro ao exportar o projeto.");
-        console.error("Erro ao exportar projeto:", error);
-      }
+    exportResultsToCSV: () => {
+      const { result, input } = get();
+      exportResultsToCSV(result, input.projectName);
+    },
+
+    // --- ALTERAÇÃO AQUI: Implementar a nova ação ---
+    exportResultsToPDF: () => {
+      const { result, input } = get();
+      exportResultsToPDF(result, input);
     },
 
     importProject: (file) => {
       const reader = new FileReader();
-
       reader.onload = (event) => {
         try {
           const text = event.target?.result;
           if (typeof text !== "string") {
             throw new Error("Falha ao ler o arquivo.");
           }
-
           const projectData = JSON.parse(text) as CalculationInput;
-
-          // Validação simples para garantir que o objeto tem as chaves esperadas
           if (
             !projectData.projectName ||
             !projectData.vertices ||
@@ -311,8 +295,6 @@ export const useCalculationStore = create<StoreState & StoreActions>(
               "Arquivo JSON inválido ou não corresponde ao formato esperado."
             );
           }
-
-          // Garante que a estrutura de 'details' seja um array de arrays ao carregar
           if (!projectData.details || !Array.isArray(projectData.details)) {
             projectData.details = Array(projectData.numPoints)
               .fill(null)
@@ -322,7 +304,6 @@ export const useCalculationStore = create<StoreState & StoreActions>(
               (d: DetailInput[] | null) => d || []
             );
           }
-
           set({ input: projectData, result: null, activeTab: "data" });
           toast.success(
             `Projeto "${projectData.projectName}" importado com sucesso!`
@@ -336,11 +317,9 @@ export const useCalculationStore = create<StoreState & StoreActions>(
           console.error("Erro ao importar projeto:", error);
         }
       };
-
       reader.onerror = () => {
         toast.error("Não foi possível ler o arquivo selecionado.");
       };
-
       reader.readAsText(file);
     },
 

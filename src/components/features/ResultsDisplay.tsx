@@ -2,6 +2,7 @@
 
 "use client";
 
+import React from "react";
 import { useCalculationStore } from "@/store/useCalculationStore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -20,7 +21,7 @@ import {
 } from "@/components/ui/accordion";
 import { PolygonCanvas } from "./PolygonCanvas";
 import { formatAngleToString, formatDecimal } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge"; // Importar o componente Badge
+import { Badge } from "@/components/ui/badge";
 
 export function ResultsDisplay() {
   const { result, isLoading, input } = useCalculationStore();
@@ -74,29 +75,36 @@ export function ResultsDisplay() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {finalCoordinates.map(({ point, east, north }) => (
-                <TableRow key={point}>
-                  <TableCell className="font-medium">{point}</TableCell>
-                  <TableCell className="text-right">
-                    {formatDecimal(east, 3)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {formatDecimal(north, 3)}
-                  </TableCell>
-                </TableRow>
-              ))}
-              {detailCoordinates.map(({ point, east, north }) => (
-                <TableRow key={point}>
-                  <TableCell className="font-medium pl-6 text-muted-foreground">
-                    {point}
-                  </TableCell>
-                  <TableCell className="text-right text-muted-foreground">
-                    {formatDecimal(east, 3)}
-                  </TableCell>
-                  <TableCell className="text-right text-muted-foreground">
-                    {formatDecimal(north, 3)}
-                  </TableCell>
-                </TableRow>
+              {/* --- CORREÇÃO DO LINTER AQUI: 'index' removido --- */}
+              {finalCoordinates.map((coord) => (
+                <React.Fragment key={`fragment-${coord.point}`}>
+                  <TableRow>
+                    <TableCell className="font-medium">{coord.point}</TableCell>
+                    <TableCell className="text-right">
+                      {formatDecimal(coord.east, 3)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {formatDecimal(coord.north, 3)}
+                    </TableCell>
+                  </TableRow>
+                  {detailCoordinates
+                    .filter((detail) =>
+                      detail.point.startsWith(`${coord.point}-D`)
+                    )
+                    .map((detail) => (
+                      <TableRow key={detail.point}>
+                        <TableCell className="pl-6 text-muted-foreground">
+                          {detail.point}
+                        </TableCell>
+                        <TableCell className="text-right text-muted-foreground">
+                          {formatDecimal(detail.east, 3)}
+                        </TableCell>
+                        <TableCell className="text-right text-muted-foreground">
+                          {formatDecimal(detail.north, 3)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                </React.Fragment>
               ))}
             </TableBody>
           </Table>
@@ -115,8 +123,8 @@ export function ResultsDisplay() {
           >
             <AccordionItem value="item-1">
               <AccordionTrigger>Resumo da Análise de Erros</AccordionTrigger>
-              <AccordionContent className="space-y-2 text-sm">
-                <p className="flex justify-between items-center">
+              <AccordionContent className="space-y-3 text-sm p-2">
+                <div className="flex justify-between items-center">
                   <span>Erro Angular Total:</span>
                   <div className="flex items-center gap-2">
                     <Badge
@@ -130,16 +138,51 @@ export function ResultsDisplay() {
                       {formatAngleToString(errorAnalysis.angular.error)}
                     </strong>
                   </div>
-                </p>
-
-                <p className="flex justify-between">
-                  <span>Tolerância Angular:</span>{" "}
+                </div>
+                <div className="flex justify-between">
+                  <span>Tolerância Angular:</span>
                   <strong>
                     {formatAngleToString(errorAnalysis.angular.tolerance)}
                   </strong>
-                </p>
+                </div>
+                <div className="flex justify-between">
+                  <span>Correção por Vértice:</span>
+                  <strong>
+                    {formatAngleToString(errorAnalysis.angular.correction)}
+                  </strong>
+                </div>
 
-                <p className="flex justify-between items-center border-t pt-2 mt-2">
+                <div className="border-t my-3" />
+
+                <div className="flex justify-between">
+                  <span>Perímetro:</span>
+                  <strong>{formatDecimal(errorAnalysis.perimeter, 3)} m</strong>
+                </div>
+                <div className="flex justify-between">
+                  <span>Somatório ΔE:</span>
+                  <strong>
+                    {formatDecimal(errorAnalysis.linear.sumEast, 5)} m
+                  </strong>
+                </div>
+                <div className="flex justify-between">
+                  <span>Somatório ΔN:</span>
+                  <strong>
+                    {formatDecimal(errorAnalysis.linear.sumNorth, 5)} m
+                  </strong>
+                </div>
+                <div className="flex justify-between">
+                  <span>Erro Linear Total:</span>
+                  <strong>
+                    {formatDecimal(errorAnalysis.linear.totalError, 5)} m
+                  </strong>
+                </div>
+                <div className="flex justify-between">
+                  <span>Tolerância Linear:</span>
+                  <strong>
+                    1:{errorAnalysis.linear.tolerance.toLocaleString("pt-BR")}
+                  </strong>
+                </div>
+                <div className="flex justify-between items-center">
                   <span>Precisão do Levantamento:</span>
                   <div className="flex items-center gap-2">
                     <Badge
@@ -151,47 +194,7 @@ export function ResultsDisplay() {
                     </Badge>
                     <strong>{errorAnalysis.linear.precision}</strong>
                   </div>
-                </p>
-
-                <p className="flex justify-between">
-                  <span>Tolerância Linear:</span>{" "}
-                  <strong>
-                    1:{errorAnalysis.linear.tolerance.toLocaleString("pt-BR")}
-                  </strong>
-                </p>
-
-                <p className="flex justify-between border-t pt-2 mt-2">
-                  <span>Somatório ΔE:</span>{" "}
-                  <strong>
-                    {formatDecimal(errorAnalysis.linear.sumEast, 5)} m
-                  </strong>
-                </p>
-
-                <p className="flex justify-between">
-                  <span>Somatório ΔN:</span>{" "}
-                  <strong>
-                    {formatDecimal(errorAnalysis.linear.sumNorth, 5)} m
-                  </strong>
-                </p>
-
-                <p className="flex justify-between">
-                  <span>Erro Linear Total:</span>{" "}
-                  <strong>
-                    {formatDecimal(errorAnalysis.linear.totalError, 5)} m
-                  </strong>
-                </p>
-
-                <p className="flex justify-between border-t pt-2 mt-2">
-                  <span>Perímetro:</span>{" "}
-                  <strong>{formatDecimal(errorAnalysis.perimeter, 3)} m</strong>
-                </p>
-
-                <p className="flex justify-between">
-                  <span>Correção por Vértice:</span>{" "}
-                  <strong>
-                    {formatAngleToString(errorAnalysis.angular.correction)}
-                  </strong>
-                </p>
+                </div>
               </AccordionContent>
             </AccordionItem>
 
