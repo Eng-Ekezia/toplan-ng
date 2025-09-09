@@ -39,11 +39,14 @@ const initialInputState = createInitialState(4);
 
 const LOCAL_STORAGE_KEY = "toplan_projects";
 
+// --- ALTERAÇÃO AQUI ---
+type ActiveTab = "data" | "results" | "settings" | "graph";
+
 interface StoreState {
   input: CalculationInput;
   result: CalculationResult | null;
   isLoading: boolean;
-  activeTab: "data" | "results" | "settings";
+  activeTab: ActiveTab; // Usar o novo tipo
   calculationSuccess: boolean;
   errors: InputErrors;
 }
@@ -53,7 +56,6 @@ interface StoreActions {
     field: K,
     value: CalculationInput[K]
   ) => void;
-  // --- ALTERAÇÃO AQUI: Assinatura com Genéricos ---
   setNestedInput: <TParent extends "initialAzimuth" | "initialCoordinates">(
     parentField: TParent,
     childField: keyof CalculationInput[TParent],
@@ -74,7 +76,7 @@ interface StoreActions {
     value: string | number
   ) => void;
 
-  setActiveTab: (tab: "data" | "results" | "settings") => void;
+  setActiveTab: (tab: ActiveTab) => void; // Usar o novo tipo
   runCalculation: () => void;
   setCalculationSuccess: (status: boolean) => void;
   saveProject: () => void;
@@ -111,7 +113,6 @@ export const useCalculationStore = create<StoreState & StoreActions>(
       set({ input, errors: validateInput(input) });
     },
 
-    // --- ALTERAÇÃO AQUI: Implementação com a nova assinatura ---
     setNestedInput: (parentField, childField, value) => {
       const state = get();
       const input = {

@@ -21,13 +21,15 @@ export default function TabsLayout({
 
   useEffect(() => {
     if (calculationSuccess) {
-      router.push("/results");
+      router.push("/graph");
       setCalculationSuccess(false);
     }
   }, [calculationSuccess, router, setCalculationSuccess]);
 
   useEffect(() => {
-    if (pathname === "/results" && activeTab !== "results") {
+    if (pathname === "/graph" && activeTab !== "graph") {
+      setActiveTab("graph"); // Removido o 'as any'
+    } else if (pathname === "/results" && activeTab !== "results") {
       setActiveTab("results");
     } else if (pathname === "/settings" && activeTab !== "settings") {
       setActiveTab("settings");
@@ -37,12 +39,10 @@ export default function TabsLayout({
   }, [pathname, setActiveTab, activeTab]);
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl xl:max-w-7xl mx-auto">
       <Header />
 
-      {/* Padding top (pt-14) para o Header e padding bottom (pb-16) para a BottomNav */}
       <main className="pt-14 pb-16">
-        {/* Wrapper interno para espaçamento do conteúdo */}
         <div className="px-4 md:px-6 py-4">{children}</div>
       </main>
 

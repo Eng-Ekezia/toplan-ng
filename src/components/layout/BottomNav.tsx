@@ -4,23 +4,27 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Pencil, BarChart3, Settings } from "lucide-react";
+// Adicionar o novo ícone
+import { Pencil, BarChart3, Settings, DraftingCompass } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function BottomNav() {
   const pathname = usePathname();
 
+  // Adicionar o novo item de navegação
   const navItems = [
     { href: "/", icon: Pencil, label: "Dados" },
     { href: "/results", icon: BarChart3, label: "Resultados" },
+    { href: "/graph", icon: DraftingCompass, label: "Gráfico" },
     { href: "/settings", icon: Settings, label: "Ajustes" },
   ];
 
   return (
-    // Adicionado: fixed, bottom-0, left-0, right-0, z-40
     <footer className="fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-lg border-t supports-[backdrop-filter]:bg-background/60">
-      <nav className="max-w-4xl mx-auto h-16 flex justify-around items-center">
+      <nav className="max-w-4xl xl:max-w-7xl mx-auto h-16 flex justify-around items-center">
         {navItems.map((item) => {
+          // Lógica para considerar / e /graph como ativos juntos temporariamente, se necessário
+          // Neste caso, vamos manter a lógica simples: apenas a rota exata fica ativa
           const isActive = pathname === item.href;
           return (
             <Link

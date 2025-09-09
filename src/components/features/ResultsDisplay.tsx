@@ -19,7 +19,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { PolygonCanvas } from "./PolygonCanvas";
 import { formatAngleToString, formatDecimal } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 
@@ -55,11 +54,7 @@ export function ResultsDisplay() {
         </p>
       </div>
 
-      <PolygonCanvas
-        coordinates={finalCoordinates}
-        details={detailCoordinates}
-        azimuths={intermediate.azimuths}
-      />
+      {/* O PolygonCanvas foi removido daqui */}
 
       <Card>
         <CardHeader>
@@ -75,7 +70,6 @@ export function ResultsDisplay() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {/* --- CORREÇÃO DO LINTER AQUI: 'index' removido --- */}
               {finalCoordinates.map((coord) => (
                 <React.Fragment key={`fragment-${coord.point}`}>
                   <TableRow>
