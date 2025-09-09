@@ -3,7 +3,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { motion } from "framer-motion"; // Importar motion
+import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useCalculationStore } from "@/store/useCalculationStore";
@@ -27,7 +27,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-// Variantes de animação
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -112,109 +111,121 @@ export default function SettingsPage() {
           Ajustes e Gerenciamento
         </motion.h1>
 
-        <motion.div variants={itemVariants} className="space-y-4">
-          <SectionTitle>Ações Rápidas</SectionTitle>
-          <Card>
-            <CardContent className="space-y-4 pt-6">
-              <Button onClick={saveProject} className="w-full">
-                <Save className="mr-2 h-4 w-4" />
-                Salvar Projeto Atual
-              </Button>
+        {/* Grid responsivo para os cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 md:gap-8 md:items-start">
+          <motion.div variants={itemVariants} className="space-y-4">
+            <SectionTitle>Ações Rápidas</SectionTitle>
+            <Card>
+              <CardContent className="space-y-4 pt-6">
+                <Button onClick={saveProject} className="w-full">
+                  <Save className="mr-2 h-4 w-4" />
+                  Salvar Projeto Atual
+                </Button>
 
-              <input
-                type="file"
-                ref={fileInputRef}
-                className="hidden"
-                accept=".json"
-                onChange={handleFileChange}
-              />
-              <Button
-                onClick={handleImportClick}
-                variant="outline"
-                className="w-full"
-              >
-                <Upload className="mr-2 h-4 w-4" />
-                Importar Projeto (JSON)
-              </Button>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  className="hidden"
+                  accept=".json"
+                  onChange={handleFileChange}
+                />
+                <Button
+                  onClick={handleImportClick}
+                  variant="outline"
+                  className="w-full"
+                >
+                  <Upload className="mr-2 h-4 w-4" />
+                  Importar Projeto (JSON)
+                </Button>
 
-              <Button
-                onClick={exportProject}
-                variant="outline"
-                className="w-full"
-              >
-                <Download className="mr-2 h-4 w-4" />
-                Exportar Projeto (JSON)
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={exportResultsToCSV}
-                disabled={!result}
-              >
-                <Download className="mr-2 h-4 w-4" />
-                Exportar Resultados (CSV)
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={exportResultsToPDF}
-                disabled={!result}
-              >
-                <Download className="mr-2 h-4 w-4" />
-                Exportar Relatório (PDF)
-              </Button>
+                <Button
+                  onClick={exportProject}
+                  variant="outline"
+                  className="w-full"
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Exportar Projeto (JSON)
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={exportResultsToCSV}
+                  disabled={!result}
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Exportar Resultados (CSV)
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={exportResultsToPDF}
+                  disabled={!result}
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Exportar Relatório (PDF)
+                </Button>
 
-              <Button onClick={resetInput} variant="outline" className="w-full">
-                <FilePlus className="mr-2 h-4 w-4" />
-                Novo Projeto (Limpar Formulário)
-              </Button>
-            </CardContent>
-          </Card>
-        </motion.div>
+                <Button
+                  onClick={resetInput}
+                  variant="outline"
+                  className="w-full"
+                >
+                  <FilePlus className="mr-2 h-4 w-4" />
+                  Novo Projeto (Limpar Formulário)
+                </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-        <motion.div variants={itemVariants} className="space-y-4">
-          <SectionTitle>Projetos Salvos</SectionTitle>
-          <Card>
-            <CardContent className="pt-6">
-              {savedProjects.length > 0 ? (
-                <ul className="space-y-2">
-                  {savedProjects.map((projectName) => (
-                    <li
-                      key={projectName}
-                      className="flex items-center justify-between p-2 border rounded-md"
-                    >
-                      <span className="font-medium text-sm">{projectName}</span>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => loadProject(projectName)}
-                        >
-                          <FolderUp className="mr-2 h-4 w-4" />
-                          Carregar
-                        </Button>
-                        <AlertDialogTrigger asChild>
+          <motion.div
+            variants={itemVariants}
+            className="space-y-4 mt-6 md:mt-0"
+          >
+            <SectionTitle>Projetos Salvos</SectionTitle>
+            <Card>
+              <CardContent className="pt-6">
+                {savedProjects.length > 0 ? (
+                  <ul className="space-y-2">
+                    {savedProjects.map((projectName) => (
+                      <li
+                        key={projectName}
+                        className="flex items-center justify-between p-2 border rounded-md"
+                      >
+                        <span className="font-medium text-sm">
+                          {projectName}
+                        </span>
+                        <div className="flex items-center gap-2">
                           <Button
                             size="sm"
-                            variant="destructive"
-                            aria-label={`Excluir projeto ${projectName}`}
-                            onClick={() => setProjectToDelete(projectName)}
+                            variant="outline"
+                            onClick={() => loadProject(projectName)}
                           >
-                            <FileX className="h-4 w-4" />
+                            <FolderUp className="mr-2 h-4 w-4" />
+                            Carregar
                           </Button>
-                        </AlertDialogTrigger>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-sm text-muted-foreground text-center">
-                  Nenhum projeto salvo.
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              aria-label={`Excluir projeto ${projectName}`}
+                              onClick={() => setProjectToDelete(projectName)}
+                            >
+                              <FileX className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center">
+                    Nenhum projeto salvo.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
       </motion.div>
 
       <AlertDialogContent>

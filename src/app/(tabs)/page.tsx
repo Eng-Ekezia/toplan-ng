@@ -35,25 +35,31 @@ const SectionTitle = ({ children }: { children: React.ReactNode }) => (
 export default function DataEntryPage() {
   return (
     <motion.div
-      className="space-y-4"
+      // Grid para telas grandes (lg), com 3 colunas para a esquerda e 2 para a direita
+      className="grid grid-cols-1 lg:grid-cols-5 lg:gap-8"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
     >
-      <motion.div variants={itemVariants}>
-        <SectionTitle>Dados do Projeto</SectionTitle>
-        <ProjectDataForm />
-      </motion.div>
+      {/* Coluna da Esquerda */}
+      <div className="lg:col-span-3 space-y-4">
+        <motion.div variants={itemVariants}>
+          <SectionTitle>Dados do Projeto</SectionTitle>
+          <ProjectDataForm />
+        </motion.div>
 
-      <motion.div variants={itemVariants}>
-        <SectionTitle>Dados da Poligonal</SectionTitle>
-        <PolygonDataForm />
-      </motion.div>
+        <motion.div variants={itemVariants}>
+          <SectionTitle>Dados da Poligonal</SectionTitle>
+          <PolygonDataForm />
+        </motion.div>
+      </div>
 
-      <motion.div variants={itemVariants}>
-        {/* O VertexList já tem o título internamente, então só precisamos dele aqui */}
-        <VertexList />
-      </motion.div>
+      {/* Coluna da Direita */}
+      <div className="lg:col-span-2 mt-4 lg:mt-0">
+        <motion.div variants={itemVariants}>
+          <VertexList />
+        </motion.div>
+      </div>
     </motion.div>
   );
 }
