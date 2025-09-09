@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Minus } from "lucide-react";
 import { formatAngleToSimpleString } from "@/lib/utils";
+import { CANVAS_CONSTANTS } from "@/lib/constants"; // Importar constantes
 
 interface PolygonCanvasProps {
   coordinates: FinalCoordinate[];
@@ -56,7 +57,7 @@ export function PolygonCanvas({
       if (coord.north > maxY) maxY = coord.north;
     }
 
-    const padding = 50;
+    const padding = CANVAS_CONSTANTS.PADDING; // Usar constante
     const canvasWidth = canvas.width - padding * 2;
     const canvasHeight = canvas.height - padding * 2;
     const dataWidth = maxX - minX;
@@ -100,8 +101,8 @@ export function PolygonCanvas({
     }
     coordinates.forEach((coord: FinalCoordinate, i: number) => {
       const point = transform(coord.east, coord.north);
-      const northLineLength = 25;
-      const arcRadius = 20;
+      const northLineLength = CANVAS_CONSTANTS.NORTH_LINE_LENGTH; // Usar constante
+      const arcRadius = CANVAS_CONSTANTS.AZIMUTH_ARC_RADIUS; // Usar constante
 
       if (azimuths[i] !== undefined) {
         ctx.beginPath();

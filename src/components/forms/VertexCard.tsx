@@ -7,12 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useCalculationStore } from "@/store/useCalculationStore";
 import { VertexInput } from "@/lib/types";
-
-// Componente para exibir mensagens de erro
-const ErrorMessage = ({ message }: { message?: string }) => {
-  if (!message) return null;
-  return <p className="text-sm font-medium text-destructive mt-1">{message}</p>;
-};
+import { ErrorMessage } from "@/components/ui/error-message"; // Importar o novo componente
 
 interface VertexCardProps {
   vertex: VertexInput;

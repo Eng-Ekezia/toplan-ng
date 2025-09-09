@@ -1,6 +1,7 @@
 // src/lib/calculations.ts
 
 import { CalculationInput, CalculationResult, DetailCoordinate } from "./types";
+import { CALCULATION_CONSTANTS } from "./constants"; // Importar constantes
 
 const MIN_TO_DEG = 1.0 / 60.0;
 const SEC_TO_DEG = 1.0 / 3600.0;
@@ -29,7 +30,6 @@ export function calculatePlanimetry(data: CalculationInput): CalculationResult {
   } = data;
 
   // 1. Conversão e Validação Inicial
-  // ... (sem alterações)
   if (vertices.some((v) => v.distance === "")) {
     throw new Error("Todas as distâncias dos vértices devem ser preenchidas.");
   }
@@ -166,12 +166,14 @@ export function calculatePlanimetry(data: CalculationInput): CalculationResult {
     "pt-BR"
   )}`;
 
-  // Cálculo de tolerâncias
-  const angularToleranceInSeconds = 30 * Math.sqrt(numPoints) + 10;
+  // Cálculo de tolerâncias usando as constantes
+  const angularToleranceInSeconds =
+    CALCULATION_CONSTANTS.ANGULAR_TOLERANCE_FACTOR * Math.sqrt(numPoints) +
+    CALCULATION_CONSTANTS.ANGULAR_TOLERANCE_SUM;
   const angularToleranceInDecimal = angularToleranceInSeconds * SEC_TO_DEG;
   const isAngularOk = Math.abs(angularError) <= angularToleranceInDecimal;
 
-  const linearTolerance = 12000;
+  const linearTolerance = CALCULATION_CONSTANTS.LINEAR_TOLERANCE_DENOMINATOR;
   const isLinearOk = precisionDenominator >= linearTolerance;
 
   return {

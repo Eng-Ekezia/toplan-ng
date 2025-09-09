@@ -26,12 +26,7 @@ import { Input } from "@/components/ui/input";
 import { useCalculationStore } from "@/store/useCalculationStore";
 import { Plus, Trash2 } from "lucide-react";
 import { DetailInput } from "@/lib/types";
-
-// Componente para exibir mensagens de erro
-const ErrorMessage = ({ message }: { message?: string }) => {
-  if (!message) return null;
-  return <p className="text-sm font-medium text-destructive mt-1">{message}</p>;
-};
+import { ErrorMessage } from "@/components/ui/error-message"; // Importar o novo componente
 
 interface DetailsModalProps {
   vertexIndex: number;

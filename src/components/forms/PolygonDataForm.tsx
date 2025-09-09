@@ -13,12 +13,7 @@ import {
 } from "@/components/ui/select";
 import { useCalculationStore } from "@/store/useCalculationStore";
 import React from "react";
-
-// Componente para exibir mensagens de erro
-const ErrorMessage = ({ message }: { message?: string }) => {
-  if (!message) return null;
-  return <p className="text-sm font-medium text-destructive mt-1">{message}</p>;
-};
+import { ErrorMessage } from "@/components/ui/error-message"; // Importar o novo componente
 
 export function PolygonDataForm() {
   const { input, setNumPoints, setInput, setNestedInput, errors } =
@@ -26,7 +21,7 @@ export function PolygonDataForm() {
 
   return (
     <Card>
-      <CardContent className="space-y-6 pt-6">
+      <CardContent className="space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="numPoints">Nº de Vértices</Label>

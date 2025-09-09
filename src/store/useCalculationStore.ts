@@ -53,9 +53,10 @@ interface StoreActions {
     field: K,
     value: CalculationInput[K]
   ) => void;
-  setNestedInput: (
-    parentField: "initialAzimuth" | "initialCoordinates",
-    childField: string,
+  // --- ALTERAÇÃO AQUI: Assinatura com Genéricos ---
+  setNestedInput: <TParent extends "initialAzimuth" | "initialCoordinates">(
+    parentField: TParent,
+    childField: keyof CalculationInput[TParent],
     value: string | number
   ) => void;
   setNumPoints: (numPoints: number) => void;
@@ -110,6 +111,7 @@ export const useCalculationStore = create<StoreState & StoreActions>(
       set({ input, errors: validateInput(input) });
     },
 
+    // --- ALTERAÇÃO AQUI: Implementação com a nova assinatura ---
     setNestedInput: (parentField, childField, value) => {
       const state = get();
       const input = {
