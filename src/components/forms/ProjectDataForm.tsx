@@ -1,20 +1,25 @@
 // src/components/forms/ProjectDataForm.tsx
 
 "use client";
-import { Card, CardContent } from "@/components/ui/card"; // Removido CardHeader e CardTitle
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCalculationStore } from "@/store/useCalculationStore";
 
+// Componente para exibir mensagens de erro
+const ErrorMessage = ({ message }: { message?: string }) => {
+  if (!message) return null;
+  return <p className="text-sm font-medium text-destructive mt-1">{message}</p>;
+};
+
 export function ProjectDataForm() {
-  const { input, setInput } = useCalculationStore();
+  const { input, setInput, errors } = useCalculationStore();
 
   return (
-    // O Card agora não tem mais o Header
     <Card>
-      <CardContent className="space-y-4 pt-6">
+      <CardContent className="space-y-4 ">
         {" "}
-        {/* Adicionado pt-6 para compensar a remoção do header */}
+        {/* removido pt-6 */}
         <div className="space-y-2">
           <Label htmlFor="clientName">
             Nome do Cliente{" "}
@@ -26,6 +31,7 @@ export function ProjectDataForm() {
             value={input.clientName}
             onChange={(e) => setInput("clientName", e.target.value)}
           />
+          {/* Nenhuma validação necessária para este campo opcional */}
         </div>
         <div className="space-y-2">
           <Label htmlFor="projectName">Nome do Projeto / Fazenda</Label>
@@ -35,7 +41,9 @@ export function ProjectDataForm() {
             value={input.projectName}
             onChange={(e) => setInput("projectName", e.target.value)}
             required
+            aria-invalid={!!errors.projectName} // Adiciona o atributo aria-invalid
           />
+          <ErrorMessage message={errors.projectName as string} />
         </div>
       </CardContent>
     </Card>

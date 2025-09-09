@@ -36,6 +36,18 @@ export interface CalculationInput {
   details: DetailInput[][];
 }
 
+// --- NOVA TIPAGEM DE ERROS ADICIONADA AQUI ---
+// Tipagem para o objeto de erros, espelhando a estrutura do `input`
+export type InputErrors = {
+  [K in keyof CalculationInput]?: K extends "vertices"
+    ? Array<Partial<Record<keyof VertexInput, string>>>
+    : K extends "details"
+    ? Array<Array<Partial<Record<keyof DetailInput, string>>>>
+    : K extends "initialAzimuth" | "initialCoordinates"
+    ? Partial<Record<keyof CalculationInput[K], string>>
+    : string;
+};
+
 // Define a estrutura para as coordenadas finais de um ponto da poligonal
 export interface FinalCoordinate {
   point: string;

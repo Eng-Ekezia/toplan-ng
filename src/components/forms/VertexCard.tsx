@@ -8,6 +8,12 @@ import { Button } from "@/components/ui/button";
 import { useCalculationStore } from "@/store/useCalculationStore";
 import { VertexInput } from "@/lib/types";
 
+// Componente para exibir mensagens de erro
+const ErrorMessage = ({ message }: { message?: string }) => {
+  if (!message) return null;
+  return <p className="text-sm font-medium text-destructive mt-1">{message}</p>;
+};
+
 interface VertexCardProps {
   vertex: VertexInput;
   index: number;
@@ -21,9 +27,10 @@ export function VertexCard({
   totalPoints,
   onOpenDetails,
 }: VertexCardProps) {
-  const { updateVertexInput, input } = useCalculationStore();
+  const { updateVertexInput, input, errors } = useCalculationStore();
   const detailCount = input.details[index]?.length || 0;
   const nextPointLabel = index + 1 === totalPoints ? 1 : index + 2;
+  const vertexErrors = errors.vertices?.[index];
 
   return (
     <Card>
@@ -39,7 +46,6 @@ export function VertexCard({
           </Button>
         </div>
       </CardHeader>
-      {/* Adicionado space-y-4 para espaçamento vertical */}
       <CardContent className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor={`vertex-angle-deg-${index}`}>Ângulo Medido</Label>
@@ -52,6 +58,7 @@ export function VertexCard({
               onChange={(e) =>
                 updateVertexInput(index, "angle_deg", e.target.value)
               }
+              aria-invalid={!!vertexErrors?.angle_deg}
             />
             <Input
               type="number"
@@ -70,6 +77,7 @@ export function VertexCard({
               }
             />
           </div>
+          <ErrorMessage message={vertexErrors?.angle_deg} />
         </div>
         <div className="space-y-2">
           <Label htmlFor={`vertex-distance-${index}`}>
@@ -83,7 +91,9 @@ export function VertexCard({
             onChange={(e) =>
               updateVertexInput(index, "distance", e.target.value)
             }
+            aria-invalid={!!vertexErrors?.distance}
           />
+          <ErrorMessage message={vertexErrors?.distance} />
         </div>
       </CardContent>
     </Card>

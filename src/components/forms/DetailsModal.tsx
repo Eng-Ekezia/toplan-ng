@@ -2,7 +2,6 @@
 
 "use client";
 
-// Adicionar imports do AlertDialog
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,6 +26,12 @@ import { Input } from "@/components/ui/input";
 import { useCalculationStore } from "@/store/useCalculationStore";
 import { Plus, Trash2 } from "lucide-react";
 import { DetailInput } from "@/lib/types";
+
+// Componente para exibir mensagens de erro
+const ErrorMessage = ({ message }: { message?: string }) => {
+  if (!message) return null;
+  return <p className="text-sm font-medium text-destructive mt-1">{message}</p>;
+};
 
 interface DetailsModalProps {
   vertexIndex: number;
@@ -109,6 +114,9 @@ function DetailRow({
   onRemove,
   onUpdate,
 }: DetailRowProps) {
+  const { errors } = useCalculationStore();
+  const detailErrors = errors.details?.[vertexIndex]?.[detailIndex];
+
   const handleUpdate = (field: keyof DetailInput, value: string) => {
     onUpdate(vertexIndex, detailIndex, field, value);
   };
@@ -147,7 +155,6 @@ function DetailRow({
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          {/* Adicionar htmlFor */}
           <label
             htmlFor={`detail-angle-deg-${vertexIndex}-${detailIndex}`}
             className="text-xs text-muted-foreground"
@@ -156,11 +163,12 @@ function DetailRow({
           </label>
           <div className="grid grid-cols-3 gap-2 mt-1">
             <Input
-              id={`detail-angle-deg-${vertexIndex}-${detailIndex}`} // Adicionar id
+              id={`detail-angle-deg-${vertexIndex}-${detailIndex}`}
               type="number"
               placeholder="G°"
               value={detail.angle_deg}
               onChange={(e) => handleUpdate("angle_deg", e.target.value)}
+              aria-invalid={!!detailErrors?.angle_deg}
             />
             <Input
               type="number"
@@ -175,9 +183,9 @@ function DetailRow({
               onChange={(e) => handleUpdate("angle_sec", e.target.value)}
             />
           </div>
+          <ErrorMessage message={detailErrors?.angle_deg} />
         </div>
         <div>
-          {/* Adicionar htmlFor */}
           <label
             htmlFor={`detail-distance-${vertexIndex}-${detailIndex}`}
             className="text-xs text-muted-foreground"
@@ -185,13 +193,15 @@ function DetailRow({
             Distância (m)
           </label>
           <Input
-            id={`detail-distance-${vertexIndex}-${detailIndex}`} // Adicionar id
+            id={`detail-distance-${vertexIndex}-${detailIndex}`}
             type="number"
             placeholder="metros"
             className="mt-1"
             value={detail.distance}
             onChange={(e) => handleUpdate("distance", e.target.value)}
+            aria-invalid={!!detailErrors?.distance}
           />
+          <ErrorMessage message={detailErrors?.distance} />
         </div>
       </div>
     </div>

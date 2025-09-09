@@ -6,10 +6,11 @@ import {
   CalculationResult,
   VertexInput,
   DetailInput,
+  InputErrors,
 } from "@/lib/types";
 import { calculatePlanimetry } from "@/lib/calculations";
+import { validateInput } from "@/lib/validation";
 import { toast } from "sonner";
-// --- ALTERAÇÃO AQUI: Importar a nova função de exportação de PDF ---
 import {
   exportInputToJSON,
   exportResultsToCSV,
@@ -44,6 +45,7 @@ interface StoreState {
   isLoading: boolean;
   activeTab: "data" | "results" | "settings";
   calculationSuccess: boolean;
+  errors: InputErrors;
 }
 
 interface StoreActions {
@@ -82,8 +84,8 @@ interface StoreActions {
   exportProject: () => void;
   importProject: (file: File) => void;
   exportResultsToCSV: () => void;
-  // --- ALTERAÇÃO AQUI: Adicionar a nova ação ---
   exportResultsToPDF: () => void;
+  validate: () => boolean;
 }
 
 export const useCalculationStore = create<StoreState & StoreActions>(
@@ -93,24 +95,49 @@ export const useCalculationStore = create<StoreState & StoreActions>(
     isLoading: false,
     activeTab: "data",
     calculationSuccess: false,
+    errors: {},
 
-    // ... (outras funções do store permanecem iguais)
-    setInput: (field, value) =>
-      set((state) => ({ input: { ...state.input, [field]: value } })),
+    validate: () => {
+      const { input } = get();
+      const newErrors = validateInput(input);
+      set({ errors: newErrors });
+      return Object.keys(newErrors).length === 0;
+    },
 
-    setNestedInput: (parentField, childField, value) =>
-      set((state) => ({
-        input: {
-          ...state.input,
-          [parentField]: {
-            ...(state.input[parentField] as object),
-            [childField]: value,
-          },
+    setInput: (field, value) => {
+      const state = get();
+      const input = { ...state.input, [field]: value };
+      set({ input, errors: validateInput(input) });
+    },
+
+    setNestedInput: (parentField, childField, value) => {
+      const state = get();
+      const input = {
+        ...state.input,
+        [parentField]: {
+          ...(state.input[parentField] as object),
+          [childField]: value,
         },
-      })),
+      };
+      set({ input, errors: validateInput(input) });
+    },
+
+    updateVertexInput: (index, field, value) => {
+      const state = get();
+      const newVertices = state.input.vertices.map((vertex, i) => {
+        if (i === index) {
+          return { ...vertex, [field]: value };
+        }
+        return vertex;
+      });
+      const input = { ...state.input, vertices: newVertices };
+      set({ input, errors: validateInput(input) });
+    },
+
     setNumPoints: (numPoints) => {
       if (numPoints < 3) return;
-      const currentInput = get().input;
+      const state = get();
+      const currentInput = state.input;
       const newVertices: VertexInput[] = Array(numPoints)
         .fill(null)
         .map(
@@ -126,75 +153,41 @@ export const useCalculationStore = create<StoreState & StoreActions>(
         .fill(null)
         .map((_, i) => currentInput.details[i] || []);
 
-      set((state) => ({
-        input: {
-          ...state.input,
-          numPoints,
-          vertices: newVertices,
-          details: newDetails,
-        },
-      }));
+      const input = {
+        ...currentInput,
+        numPoints,
+        vertices: newVertices,
+        details: newDetails,
+      };
+      set({ input, errors: validateInput(input) });
     },
-    updateVertexInput: (index, field, value) =>
-      set((state) => {
-        const newVertices = state.input.vertices.map((vertex, i) => {
-          if (i === index) {
-            return { ...vertex, [field]: value };
-          }
-          return vertex;
-        });
-        return {
-          input: {
-            ...state.input,
-            vertices: newVertices,
-          },
-        };
-      }),
 
-    addDetail: (vertexIndex) =>
-      set((state) => {
-        const newDetails = [...state.input.details];
-        newDetails[vertexIndex] = [
-          ...newDetails[vertexIndex],
-          { angle_deg: "", angle_min: "", angle_sec: "", distance: "" },
-        ];
-        return { input: { ...state.input, details: newDetails } };
-      }),
-
-    removeDetail: (vertexIndex, detailIndex) =>
-      set((state) => {
-        const newDetails = [...state.input.details];
-        newDetails[vertexIndex] = newDetails[vertexIndex].filter(
-          (_, i) => i !== detailIndex
-        );
-        return { input: { ...state.input, details: newDetails } };
-      }),
-
-    updateDetailInput: (vertexIndex, detailIndex, field, value) =>
-      set((state) => {
-        const newDetails = [...state.input.details];
-        newDetails[vertexIndex] = newDetails[vertexIndex].map((detail, i) => {
-          if (i === detailIndex) {
-            return { ...detail, [field]: value };
-          }
-          return detail;
-        });
-        return { input: { ...state.input, details: newDetails } };
-      }),
-
-    setActiveTab: (tab) => set({ activeTab: tab }),
-
-    setCalculationSuccess: (status) => set({ calculationSuccess: status }),
+    updateDetailInput: (vertexIndex, detailIndex, field, value) => {
+      const state = get();
+      const newDetails = [...state.input.details];
+      newDetails[vertexIndex] = newDetails[vertexIndex].map((detail, i) => {
+        if (i === detailIndex) {
+          return { ...detail, [field]: value };
+        }
+        return detail;
+      });
+      const input = { ...state.input, details: newDetails };
+      set({ input, errors: validateInput(input) });
+    },
 
     runCalculation: () => {
+      const { validate } = get();
+      if (!validate()) {
+        toast.error(
+          "Existem erros no formulário. Por favor, verifique os campos destacados."
+        );
+        return;
+      }
+
       set({ isLoading: true, result: null, calculationSuccess: false });
       try {
-        const inputData = get().input;
-        if (!inputData.projectName || inputData.projectName.trim() === "") {
-          throw new Error("O nome do projeto é obrigatório.");
-        }
-        const calculationResult = calculatePlanimetry(inputData);
-
+        const { input } = get();
+        const calculationResult = calculatePlanimetry(input);
         set({
           result: calculationResult,
           isLoading: false,
@@ -212,24 +205,11 @@ export const useCalculationStore = create<StoreState & StoreActions>(
       }
     },
 
-    getSavedProjects: () => {
-      if (typeof window === "undefined") return [];
-      const projects = localStorage.getItem(LOCAL_STORAGE_KEY);
-      return projects ? Object.keys(JSON.parse(projects)) : [];
+    resetInput: () => {
+      set({ input: createInitialState(4), result: null, errors: {} });
+      toast.info("Campos de entrada foram limpos.");
     },
-    saveProject: () => {
-      const { input } = get();
-      if (!input.projectName.trim()) {
-        toast.error("O nome do projeto é obrigatório para salvar.");
-        return;
-      }
-      const projects = JSON.parse(
-        localStorage.getItem(LOCAL_STORAGE_KEY) || "{}"
-      );
-      projects[input.projectName] = input;
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(projects));
-      toast.success(`Projeto "${input.projectName}" salvo com sucesso!`);
-    },
+
     loadProject: (projectName) => {
       const projects = JSON.parse(
         localStorage.getItem(LOCAL_STORAGE_KEY) || "{}"
@@ -247,11 +227,61 @@ export const useCalculationStore = create<StoreState & StoreActions>(
           );
         }
 
-        set({ input: projectData, result: null, activeTab: "data" });
+        set({
+          input: projectData,
+          result: null,
+          activeTab: "data",
+          errors: {},
+        });
         toast.success(`Projeto "${projectName}" carregado!`);
       } else {
         toast.error("Projeto não encontrado.");
       }
+    },
+
+    addDetail: (vertexIndex) =>
+      set((state) => {
+        const newDetails = [...state.input.details];
+        newDetails[vertexIndex] = [
+          ...newDetails[vertexIndex],
+          { angle_deg: "", angle_min: "", angle_sec: "", distance: "" },
+        ];
+        return { input: { ...state.input, details: newDetails } };
+      }),
+    removeDetail: (vertexIndex, detailIndex) =>
+      set((state) => {
+        const newDetails = [...state.input.details];
+        newDetails[vertexIndex] = newDetails[vertexIndex].filter(
+          (_, i) => i !== detailIndex
+        );
+        const input = { ...state.input, details: newDetails };
+        return { input, errors: validateInput(input) };
+      }),
+    setActiveTab: (tab) => set({ activeTab: tab }),
+    setCalculationSuccess: (status) => set({ calculationSuccess: status }),
+    getSavedProjects: () => {
+      if (typeof window === "undefined") return [];
+      const projects = localStorage.getItem(LOCAL_STORAGE_KEY);
+      return projects ? Object.keys(JSON.parse(projects)) : [];
+    },
+    saveProject: () => {
+      const { input, validate } = get();
+      if (!validate()) {
+        toast.error(
+          "Não é possível salvar um projeto com erros no formulário."
+        );
+        return;
+      }
+      if (!input.projectName.trim()) {
+        toast.error("O nome do projeto é obrigatório para salvar.");
+        return;
+      }
+      const projects = JSON.parse(
+        localStorage.getItem(LOCAL_STORAGE_KEY) || "{}"
+      );
+      projects[input.projectName] = input;
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(projects));
+      toast.success(`Projeto "${input.projectName}" salvo com sucesso!`);
     },
     deleteProject: (projectName) => {
       const projects = JSON.parse(
@@ -261,22 +291,15 @@ export const useCalculationStore = create<StoreState & StoreActions>(
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(projects));
       toast.info(`Projeto "${projectName}" deletado.`);
     },
-
-    exportProject: () => {
-      exportInputToJSON(get().input);
-    },
-
+    exportProject: () => exportInputToJSON(get().input),
     exportResultsToCSV: () => {
       const { result, input } = get();
       exportResultsToCSV(result, input.projectName);
     },
-
-    // --- ALTERAÇÃO AQUI: Implementar a nova ação ---
     exportResultsToPDF: () => {
       const { result, input } = get();
       exportResultsToPDF(result, input);
     },
-
     importProject: (file) => {
       const reader = new FileReader();
       reader.onload = (event) => {
@@ -304,7 +327,12 @@ export const useCalculationStore = create<StoreState & StoreActions>(
               (d: DetailInput[] | null) => d || []
             );
           }
-          set({ input: projectData, result: null, activeTab: "data" });
+          set({
+            input: projectData,
+            result: null,
+            activeTab: "data",
+            errors: {},
+          });
           toast.success(
             `Projeto "${projectData.projectName}" importado com sucesso!`
           );
@@ -321,11 +349,6 @@ export const useCalculationStore = create<StoreState & StoreActions>(
         toast.error("Não foi possível ler o arquivo selecionado.");
       };
       reader.readAsText(file);
-    },
-
-    resetInput: () => {
-      set({ input: createInitialState(4), result: null });
-      toast.info("Campos de entrada foram limpos.");
     },
   })
 );

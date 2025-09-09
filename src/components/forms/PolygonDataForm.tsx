@@ -1,7 +1,7 @@
 // src/components/forms/PolygonDataForm.tsx
 
 "use client";
-import { Card, CardContent } from "@/components/ui/card"; // Removido CardHeader e CardTitle
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -14,16 +14,19 @@ import {
 import { useCalculationStore } from "@/store/useCalculationStore";
 import React from "react";
 
+// Componente para exibir mensagens de erro
+const ErrorMessage = ({ message }: { message?: string }) => {
+  if (!message) return null;
+  return <p className="text-sm font-medium text-destructive mt-1">{message}</p>;
+};
+
 export function PolygonDataForm() {
-  const { input, setNumPoints, setInput, setNestedInput } =
+  const { input, setNumPoints, setInput, setNestedInput, errors } =
     useCalculationStore();
 
   return (
-    // O Card agora não tem mais o Header
     <Card>
       <CardContent className="space-y-6 pt-6">
-        {" "}
-        {/* Adicionado pt-6 */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="numPoints">Nº de Vértices</Label>
@@ -33,7 +36,9 @@ export function PolygonDataForm() {
               min="3"
               value={input.numPoints}
               onChange={(e) => setNumPoints(Number(e.target.value))}
+              aria-invalid={!!errors.numPoints}
             />
+            <ErrorMessage message={errors.numPoints as string} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="angleType">Tipo de Ângulo</Label>
@@ -64,6 +69,7 @@ export function PolygonDataForm() {
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                 setNestedInput("initialAzimuth", "deg", e.target.value)
               }
+              aria-invalid={!!errors.initialAzimuth?.deg}
             />
             <Input
               type="number"
@@ -82,6 +88,7 @@ export function PolygonDataForm() {
               }
             />
           </div>
+          <ErrorMessage message={errors.initialAzimuth?.deg} />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
@@ -94,7 +101,9 @@ export function PolygonDataForm() {
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                 setNestedInput("initialCoordinates", "east", e.target.value)
               }
+              aria-invalid={!!errors.initialCoordinates?.east}
             />
+            <ErrorMessage message={errors.initialCoordinates?.east} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="coordNorth">Coord. Norte (Y) de P1</Label>
@@ -106,7 +115,9 @@ export function PolygonDataForm() {
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                 setNestedInput("initialCoordinates", "north", e.target.value)
               }
+              aria-invalid={!!errors.initialCoordinates?.north}
             />
+            <ErrorMessage message={errors.initialCoordinates?.north} />
           </div>
         </div>
       </CardContent>
