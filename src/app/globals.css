@@ -121,3 +121,16 @@ body {
   color: var(--foreground);
   font-feature-settings: "rlig" 1, "calt" 1;
 }
+/* Adicione estas novas regras abaixo */
+[data-slot="card"] {
+  transition: all 0.2s ease-in-out;
+}
+
+[data-slot="card"]:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px -2px rgba(0, 0, 0, 0.05);
+}
+
+.dark [data-slot="card"]:hover {
+  box-shadow: 0 4px 15px -2px rgba(0, 0, 0, 0.1);
+}

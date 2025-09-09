@@ -4,12 +4,13 @@
 import { useState } from "react";
 import { useCalculationStore } from "@/store/useCalculationStore";
 import { VertexCard } from "./VertexCard";
-import { DetailsModal } from "./DetailsModal"; // Importar o novo modal
+import { DetailsModal } from "./DetailsModal";
 import { Button } from "@/components/ui/button";
 import { Calculator } from "lucide-react";
+import { cn } from "@/lib/utils"; // Importar a função cn
 
 export function VertexList() {
-  const { input, runCalculation } = useCalculationStore();
+  const { input, runCalculation, isLoading } = useCalculationStore(); // Obter o estado isLoading
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedVertexIndex, setSelectedVertexIndex] = useState<number | null>(
     null
@@ -32,12 +33,20 @@ export function VertexList() {
             index={index}
             vertex={vertex}
             totalPoints={input.numPoints}
-            onOpenDetails={handleOpenDetails} // Passar a função para o card
+            onOpenDetails={handleOpenDetails}
           />
         ))}
-        <Button size="lg" className="w-full" onClick={runCalculation}>
-          <Calculator className="mr-2 h-5 w-5" />
-          Calcular
+        <Button
+          size="lg"
+          className="w-full"
+          onClick={runCalculation}
+          disabled={isLoading} // Desabilitar o botão durante o cálculo
+        >
+          <Calculator
+            className={cn("mr-2 h-5 w-5", isLoading && "animate-spin")} // Adicionar animação de spin
+          />
+          {isLoading ? "Calculando..." : "Calcular"}{" "}
+          {/* Mudar o texto durante o cálculo */}
         </Button>
       </div>
 

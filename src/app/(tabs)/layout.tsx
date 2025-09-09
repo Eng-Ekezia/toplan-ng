@@ -37,18 +37,15 @@ export default function TabsLayout({
   }, [pathname, setActiveTab, activeTab]);
 
   return (
-    // Container principal que organiza tudo
-    <div className="max-w-4xl mx-auto flex flex-col h-screen">
-      {/* Header não tem mais position: fixed */}
+    <div className="max-w-4xl mx-auto">
       <Header />
 
-      {/* A área de conteúdo principal que cresce e permite rolagem interna */}
-      <main className="flex-1 overflow-y-auto">
-        {/* Wrapper interno para espaçamento */}
+      {/* Padding top (pt-14) para o Header e padding bottom (pb-16) para a BottomNav */}
+      <main className="pt-14 pb-16">
+        {/* Wrapper interno para espaçamento do conteúdo */}
         <div className="px-4 md:px-6 py-4">{children}</div>
       </main>
 
-      {/* BottomNav não tem mais position: fixed */}
       <BottomNav />
       <Toaster position="top-center" richColors />
     </div>
