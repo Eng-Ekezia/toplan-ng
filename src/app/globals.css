@@ -120,6 +120,7 @@ body {
   background-color: var(--background);
   color: var(--foreground);
   font-feature-settings: "rlig" 1, "calt" 1;
+  transition: color 0.5s ease-in-out, background-color 0.5s ease-in-out;
 }
 /* Adicione estas novas regras abaixo */
 [data-slot="card"] {

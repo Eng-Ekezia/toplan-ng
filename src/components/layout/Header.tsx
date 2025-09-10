@@ -1,6 +1,7 @@
 // src/components/layout/Header.tsx
 
 import { Target } from "lucide-react";
+import { ThemeToggler } from "../ThemeToggler";
 
 export function Header() {
   return (
@@ -12,6 +13,7 @@ export function Header() {
           <h1 className="text-lg font-bold">TOPLAN NG</h1>
           <p className="text-xs text-muted-foreground">Planimetria Móvel</p>
         </div>
+        <ThemeToggler />
       </div>
     </header>
   );
