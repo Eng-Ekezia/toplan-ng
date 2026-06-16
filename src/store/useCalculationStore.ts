@@ -38,9 +38,18 @@ const createInitialState = (numPoints: number): CalculationInput => ({
 const initialInputState = createInitialState(4);
 
 const LOCAL_STORAGE_KEY = "toplan_projects";
+const SETTINGS_STORAGE_KEY = "toplan_settings";
 
 // --- ALTERAÇÃO AQUI ---
 type ActiveTab = "data" | "results" | "settings" | "graph";
+
+export interface AppSettings {
+  decimalPlaces: number;
+}
+
+const defaultSettings: AppSettings = {
+  decimalPlaces: 5,
+};
 
 interface StoreState {
   input: CalculationInput;
@@ -49,9 +58,11 @@ interface StoreState {
   activeTab: ActiveTab; // Usar o novo tipo
   calculationSuccess: boolean;
   errors: InputErrors;
+  settings: AppSettings;
 }
 
 interface StoreActions {
+  updateSettings: (newSettings: Partial<AppSettings>) => void;
   setInput: <K extends keyof CalculationInput>(
     field: K,
     value: CalculationInput[K]
@@ -91,6 +102,19 @@ interface StoreActions {
   validate: () => boolean;
 }
 
+const getInitialSettings = (): AppSettings => {
+  if (typeof window === "undefined") return defaultSettings;
+  const stored = localStorage.getItem(SETTINGS_STORAGE_KEY);
+  if (stored) {
+    try {
+      return { ...defaultSettings, ...JSON.parse(stored) };
+    } catch {
+      return defaultSettings;
+    }
+  }
+  return defaultSettings;
+};
+
 export const useCalculationStore = create<StoreState & StoreActions>(
   (set, get) => ({
     input: initialInputState,
@@ -99,6 +123,17 @@ export const useCalculationStore = create<StoreState & StoreActions>(
     activeTab: "data",
     calculationSuccess: false,
     errors: {},
+    settings: getInitialSettings(),
+
+    updateSettings: (newSettings) => {
+      set((state) => {
+        const updatedSettings = { ...state.settings, ...newSettings };
+        if (typeof window !== "undefined") {
+          localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(updatedSettings));
+        }
+        return { settings: updatedSettings };
+      });
+    },
 
     validate: () => {
       const { input } = get();
@@ -296,12 +331,12 @@ export const useCalculationStore = create<StoreState & StoreActions>(
     },
     exportProject: () => exportInputToJSON(get().input),
     exportResultsToCSV: () => {
-      const { result, input } = get();
-      exportResultsToCSV(result, input.projectName);
+      const { result, input, settings } = get();
+      exportResultsToCSV(result, input.projectName, settings.decimalPlaces);
     },
     exportResultsToPDF: () => {
-      const { result, input } = get();
-      exportResultsToPDF(result, input);
+      const { result, input, settings } = get();
+      exportResultsToPDF(result, input, settings.decimalPlaces);
     },
     importProject: (file) => {
       const reader = new FileReader();

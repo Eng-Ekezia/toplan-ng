@@ -82,7 +82,8 @@ export function exportInputToJSON(input: CalculationInput) {
 
 export function exportResultsToCSV(
   result: CalculationResult | null,
-  projectName: string
+  projectName: string,
+  decimalPlaces: number = 3
 ) {
   if (!result) {
     toast.error("Não há resultados calculados para exportar.");
@@ -93,8 +94,8 @@ export function exportResultsToCSV(
     const rows = [...result.finalCoordinates, ...result.detailCoordinates].map(
       (coord) => [
         coord.point,
-        formatDecimal(coord.east, 3),
-        formatDecimal(coord.north, 3),
+        formatDecimal(coord.east, decimalPlaces),
+        formatDecimal(coord.north, decimalPlaces),
       ]
     );
 
@@ -122,7 +123,8 @@ export function exportResultsToCSV(
 
 export function exportResultsToPDF(
   result: CalculationResult | null,
-  input: CalculationInput
+  input: CalculationInput,
+  decimalPlaces: number = 3
 ) {
   if (!result) {
     toast.error("Não há resultados calculados para exportar.");
@@ -165,8 +167,8 @@ export function exportResultsToPDF(
     ];
     const coordBody = allCoordinates.map((c) => [
       c.point,
-      formatDecimal(c.east, 3),
-      formatDecimal(c.north, 3),
+      formatDecimal(c.east, decimalPlaces),
+      formatDecimal(c.north, decimalPlaces),
     ]);
 
     autoTable(doc, {
@@ -204,9 +206,9 @@ export function exportResultsToPDF(
       ],
       [
         "Erro Linear Total",
-        `${formatDecimal(result.errorAnalysis.linear.totalError, 5)} m`,
+        `${formatDecimal(result.errorAnalysis.linear.totalError, Math.max(5, decimalPlaces))} m`,
       ],
-      ["Perímetro", `${formatDecimal(result.errorAnalysis.perimeter, 3)} m`],
+      ["Perímetro", `${formatDecimal(result.errorAnalysis.perimeter, decimalPlaces)} m`],
     ];
     autoTable(doc, {
       body: errorBody,
@@ -241,8 +243,8 @@ export function exportResultsToPDF(
 
     const projBody = result.intermediate.correctedAngles.map((_, i) => [
       `P${i + 1}`,
-      formatDecimal(result.intermediate.correctedProjectionsEast[i], 3),
-      formatDecimal(result.intermediate.correctedProjectionsNorth[i], 3),
+      formatDecimal(result.intermediate.correctedProjectionsEast[i], decimalPlaces),
+      formatDecimal(result.intermediate.correctedProjectionsNorth[i], decimalPlaces),
     ]);
     autoTable(doc, {
       head: [["Vértice", "ΔE Corrigida", "ΔN Corrigida"]],

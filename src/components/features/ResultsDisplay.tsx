@@ -23,7 +23,7 @@ import { formatAngleToString, formatDecimal } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 
 export function ResultsDisplay() {
-  const { result, isLoading, input } = useCalculationStore();
+  const { result, isLoading, input, settings } = useCalculationStore();
 
   if (isLoading) {
     return <p className="text-center animate-pulse">Calculando...</p>;
@@ -75,10 +75,10 @@ export function ResultsDisplay() {
                   <TableRow>
                     <TableCell className="font-medium">{coord.point}</TableCell>
                     <TableCell className="text-right">
-                      {formatDecimal(coord.east, 3)}
+                      {formatDecimal(coord.east, settings.decimalPlaces)}
                     </TableCell>
                     <TableCell className="text-right">
-                      {formatDecimal(coord.north, 3)}
+                      {formatDecimal(coord.north, settings.decimalPlaces)}
                     </TableCell>
                   </TableRow>
                   {detailCoordinates
@@ -91,10 +91,10 @@ export function ResultsDisplay() {
                           {detail.point}
                         </TableCell>
                         <TableCell className="text-right text-muted-foreground">
-                          {formatDecimal(detail.east, 3)}
+                          {formatDecimal(detail.east, settings.decimalPlaces)}
                         </TableCell>
                         <TableCell className="text-right text-muted-foreground">
-                          {formatDecimal(detail.north, 3)}
+                          {formatDecimal(detail.north, settings.decimalPlaces)}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -150,24 +150,24 @@ export function ResultsDisplay() {
 
                 <div className="flex justify-between">
                   <span>Perímetro:</span>
-                  <strong>{formatDecimal(errorAnalysis.perimeter, 3)} m</strong>
+                  <strong>{formatDecimal(errorAnalysis.perimeter, settings.decimalPlaces)} m</strong>
                 </div>
                 <div className="flex justify-between">
                   <span>Somatório ΔE:</span>
                   <strong>
-                    {formatDecimal(errorAnalysis.linear.sumEast, 5)} m
+                    {formatDecimal(errorAnalysis.linear.sumEast, Math.max(5, settings.decimalPlaces))} m
                   </strong>
                 </div>
                 <div className="flex justify-between">
                   <span>Somatório ΔN:</span>
                   <strong>
-                    {formatDecimal(errorAnalysis.linear.sumNorth, 5)} m
+                    {formatDecimal(errorAnalysis.linear.sumNorth, Math.max(5, settings.decimalPlaces))} m
                   </strong>
                 </div>
                 <div className="flex justify-between">
                   <span>Erro Linear Total:</span>
                   <strong>
-                    {formatDecimal(errorAnalysis.linear.totalError, 5)} m
+                    {formatDecimal(errorAnalysis.linear.totalError, Math.max(5, settings.decimalPlaces))} m
                   </strong>
                 </div>
                 <div className="flex justify-between">
@@ -241,33 +241,33 @@ export function ResultsDisplay() {
                         <TableRow key={i}>
                           <TableCell>P{i + 1}</TableCell>
                           <TableCell>
-                            {formatDecimal(intermediate.projectionsEast[i], 3)}
+                            {formatDecimal(intermediate.projectionsEast[i], settings.decimalPlaces)}
                           </TableCell>
                           <TableCell>
-                            {formatDecimal(intermediate.projectionsNorth[i], 3)}
+                            {formatDecimal(intermediate.projectionsNorth[i], settings.decimalPlaces)}
                           </TableCell>
                           <TableCell>
                             {formatDecimal(
                               intermediate.linearCorrectionsEast[i],
-                              3
+                              settings.decimalPlaces
                             )}
                           </TableCell>
                           <TableCell>
                             {formatDecimal(
                               intermediate.linearCorrectionsNorth[i],
-                              3
+                              settings.decimalPlaces
                             )}
                           </TableCell>
                           <TableCell>
                             {formatDecimal(
                               intermediate.correctedProjectionsEast[i],
-                              3
+                              settings.decimalPlaces
                             )}
                           </TableCell>
                           <TableCell>
                             {formatDecimal(
                               intermediate.correctedProjectionsNorth[i],
-                              3
+                              settings.decimalPlaces
                             )}
                           </TableCell>
                         </TableRow>

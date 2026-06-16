@@ -4,6 +4,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useCalculationStore } from "@/store/useCalculationStore";
@@ -15,6 +16,14 @@ import {
   Download,
   Upload,
 } from "lucide-react";
+import {
+  NumberField,
+  NumberFieldDecrement,
+  NumberFieldGroup,
+  NumberFieldIncrement,
+  NumberFieldInput,
+} from "@/components/reui/number-field";
+import { Label } from "@/components/ui/label";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -64,11 +73,19 @@ export default function SettingsPage() {
     exportResultsToCSV,
     exportResultsToPDF,
     result,
+    settings,
+    updateSettings,
   } = useCalculationStore();
 
   const [savedProjects, setSavedProjects] = useState<string[]>([]);
   const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [localDecimalPlaces, setLocalDecimalPlaces] = useState(settings.decimalPlaces);
+
+  useEffect(() => {
+    setLocalDecimalPlaces(settings.decimalPlaces);
+  }, [settings.decimalPlaces]);
 
   useEffect(() => {
     setSavedProjects(getSavedProjects());
@@ -173,6 +190,55 @@ export default function SettingsPage() {
                   <FilePlus className="mr-2 h-4 w-4" />
                   Novo Projeto (Limpar Formulário)
                 </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          <motion.div variants={itemVariants} className="space-y-4 mt-6 md:mt-0">
+            <SectionTitle>Preferências de Exibição</SectionTitle>
+            <Card>
+              <CardContent className="space-y-4 pt-6">
+                <div className="space-y-2">
+                  <Label htmlFor="decimal-places">Casas Decimais (Resultados)</Label>
+                  <NumberField
+                    id="decimal-places"
+                    value={localDecimalPlaces}
+                    onValueChange={(value) => setLocalDecimalPlaces(Number(value))}
+                    min={2}
+                    max={10}
+                  >
+                    <NumberFieldGroup>
+                      <NumberFieldDecrement />
+                      <NumberFieldInput />
+                      <NumberFieldIncrement />
+                    </NumberFieldGroup>
+                  </NumberField>
+                  <p className="text-xs text-muted-foreground">
+                    Ajusta o número de casas decimais na exibição de coordenadas, projeções e distâncias. Erros e tolerâncias manterão no mínimo 5 casas decimais.
+                  </p>
+                  <div className="flex gap-2 pt-2">
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => setLocalDecimalPlaces(settings.decimalPlaces)}
+                      disabled={localDecimalPlaces === settings.decimalPlaces}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      className="flex-1"
+                      onClick={() => {
+                        updateSettings({ decimalPlaces: localDecimalPlaces });
+                        toast.success("Configuração salva com sucesso!", {
+                          description: `Os resultados serão exibidos com ${localDecimalPlaces} casas decimais.`
+                        });
+                      }}
+                      disabled={localDecimalPlaces === settings.decimalPlaces}
+                    >
+                      Confirmar
+                    </Button>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </motion.div>
