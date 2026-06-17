@@ -24,7 +24,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCalculationStore } from "@/store/useCalculationStore";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Pencil, Check, X } from "lucide-react";
+import { useState } from "react";
 import { DetailInput } from "@/lib/types";
 import { ErrorMessage } from "@/components/ui/error-message"; // Importar o novo componente
 
@@ -111,15 +112,79 @@ function DetailRow({
 }: DetailRowProps) {
   const { errors } = useCalculationStore();
   const detailErrors = errors.details?.[vertexIndex]?.[detailIndex];
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [tempName, setTempName] = useState(detail.name || "");
 
   const handleUpdate = (field: keyof DetailInput, value: string) => {
     onUpdate(vertexIndex, detailIndex, field, value);
   };
 
+  const saveName = () => {
+    handleUpdate("name", tempName);
+    setIsEditingName(false);
+  };
+
+  const cancelName = () => {
+    setTempName(detail.name || "");
+    setIsEditingName(false);
+  };
+
   return (
     <div className="p-4 border rounded-md space-y-3 bg-muted/50">
       <div className="flex justify-between items-center">
-        <p className="font-semibold text-sm">Detalhe {detailIndex + 1}</p>
+        <div className="flex items-center gap-2">
+          {isEditingName ? (
+            <div className="flex items-center gap-1">
+              <Input
+                value={tempName}
+                onChange={(e) => setTempName(e.target.value)}
+                className="h-7 w-32 text-sm"
+                placeholder={`Detalhe ${detailIndex + 1}`}
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") saveName();
+                  if (e.key === "Escape") cancelName();
+                }}
+              />
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-7 w-7"
+                onClick={saveName}
+                aria-label="Salvar nome"
+              >
+                <Check className="h-4 w-4 text-green-600" />
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-7 w-7"
+                onClick={cancelName}
+                aria-label="Cancelar edição"
+              >
+                <X className="h-4 w-4 text-destructive" />
+              </Button>
+            </div>
+          ) : (
+            <>
+              <p className="font-semibold text-sm">
+                {detail.name && detail.name.trim() !== "" ? detail.name : `Detalhe ${detailIndex + 1}`}
+              </p>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-6 w-6"
+                onClick={() => {
+                  setTempName(detail.name || "");
+                  setIsEditingName(true);
+                }}
+                aria-label="Editar nome"
+              >
+                <Pencil className="h-3 w-3 text-muted-foreground" />
+              </Button>
+            </>
+          )}
+        </div>
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button

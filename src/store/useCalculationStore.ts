@@ -282,7 +282,7 @@ export const useCalculationStore = create<StoreState & StoreActions>(
         const newDetails = [...state.input.details];
         newDetails[vertexIndex] = [
           ...newDetails[vertexIndex],
-          { angle_deg: "", angle_min: "", angle_sec: "", distance: "" },
+          { name: "", angle_deg: "", angle_min: "", angle_sec: "", distance: "" },
         ];
         return { input: { ...state.input, details: newDetails } };
       }),

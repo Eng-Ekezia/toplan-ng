@@ -10,6 +10,7 @@ export interface VertexInput {
 
 // Define a estrutura para os dados de entrada de um único ponto de detalhe (irradiação)
 export interface DetailInput {
+  name?: string;
   angle_deg: number | string;
   angle_min: number | string;
   angle_sec: number | string;
