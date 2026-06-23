@@ -281,6 +281,74 @@ export function exportResultsToPDF(
   }
 }
 
+export function exportToAutoCAD(
+  result: CalculationResult | null,
+  projectName: string
+) {
+  if (!result) {
+    toast.error("Não há resultados calculados para exportar.");
+    return;
+  }
+
+  try {
+    const textHeight = 2.5; // Variável para tamanho do texto, facilitando alteração futura
+    const lines: string[] = [];
+
+    // Configura o estilo do ponto para facilitar visualização
+    lines.push("PDMODE 34");
+    
+    // Inicia a polilinha para a poligonal principal
+    if (result.finalCoordinates.length > 0) {
+      lines.push("_PLINE");
+      result.finalCoordinates.forEach(coord => {
+        lines.push(`${formatDecimal(coord.east, 5)},${formatDecimal(coord.north, 5)}`);
+      });
+      // Liga de volta ao ponto inicial para "fechar" a poligonal
+      lines.push(`${formatDecimal(result.finalCoordinates[0].east, 5)},${formatDecimal(result.finalCoordinates[0].north, 5)}`);
+      // Linha vazia para encerrar o comando _PLINE
+      lines.push("");
+    }
+
+    // Função auxiliar para adicionar pontos e textos
+    const addPointAndText = (pointName: string, east: number, north: number) => {
+      const eStr = formatDecimal(east, 5);
+      const nStr = formatDecimal(north, 5);
+      lines.push(`_POINT ${eStr},${nStr}`);
+      lines.push(`_TEXT ${eStr},${nStr} ${textHeight} 0 ${pointName}`);
+    };
+
+    // Adiciona pontos e textos para a poligonal
+    result.finalCoordinates.forEach(coord => {
+      addPointAndText(coord.point, coord.east, coord.north);
+    });
+
+    // Adiciona pontos e textos para os detalhes
+    result.detailCoordinates.forEach(coord => {
+      addPointAndText(coord.point, coord.east, coord.north);
+    });
+
+    // Garante uma linha vazia no final do script
+    lines.push("");
+
+    const scrContent = lines.join("\n");
+    const blob = new Blob([scrContent], { type: "text/plain;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    const fileName = `${projectName.replace(/[^a-z0-9]/gi, "_").toLowerCase()}_export.scr`;
+    link.setAttribute("download", fileName);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    toast.success("Script AutoCAD gerado com sucesso!");
+  } catch (error) {
+    toast.error("Ocorreu um erro ao gerar o arquivo AutoCAD.");
+    console.error("Erro ao exportar AutoCAD:", error);
+  }
+}
+
 function drawPolygonOnPDF(
   doc: jsPDF,
   coordinates: FinalCoordinate[],

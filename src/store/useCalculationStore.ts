@@ -15,6 +15,7 @@ import {
   exportInputToJSON,
   exportResultsToCSV,
   exportResultsToPDF,
+  exportToAutoCAD,
 } from "@/lib/utils";
 
 const createInitialState = (numPoints: number): CalculationInput => ({
@@ -99,6 +100,7 @@ interface StoreActions {
   importProject: (file: File) => void;
   exportResultsToCSV: () => void;
   exportResultsToPDF: () => void;
+  exportToAutoCAD: () => void;
   validate: () => boolean;
 }
 
@@ -337,6 +339,10 @@ export const useCalculationStore = create<StoreState & StoreActions>(
     exportResultsToPDF: () => {
       const { result, input, settings } = get();
       exportResultsToPDF(result, input, settings.decimalPlaces);
+    },
+    exportToAutoCAD: () => {
+      const { result, input } = get();
+      exportToAutoCAD(result, input.projectName);
     },
     importProject: (file) => {
       const reader = new FileReader();

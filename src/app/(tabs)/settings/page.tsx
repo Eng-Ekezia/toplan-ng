@@ -72,6 +72,7 @@ export default function SettingsPage() {
     importProject,
     exportResultsToCSV,
     exportResultsToPDF,
+    exportToAutoCAD,
     result,
     settings,
     updateSettings,
@@ -180,6 +181,15 @@ export default function SettingsPage() {
                 >
                   <Download className="mr-2 h-4 w-4" />
                   Exportar Relatório (PDF)
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={exportToAutoCAD}
+                  disabled={!result}
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Exportar AutoCAD (SCR)
                 </Button>
 
                 <Button
