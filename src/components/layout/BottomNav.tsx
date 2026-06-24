@@ -5,7 +5,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 // Adicionar o novo ícone
-import { Pencil, BarChart3, Settings, DraftingCompass } from "lucide-react";
+import { Pencil, BarChart3, Settings, DraftingCompass, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function BottomNav() {
@@ -17,6 +17,7 @@ export function BottomNav() {
     { href: "/results", icon: BarChart3, label: "Resultados" },
     { href: "/graph", icon: DraftingCompass, label: "Gráfico" },
     { href: "/settings", icon: Settings, label: "Ajustes" },
+    { href: "/about", icon: Info, label: "Sobre" },
   ];
 
   return (

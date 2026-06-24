@@ -35,6 +35,8 @@ export default function TabsLayout({
       setActiveTab("settings");
     } else if (pathname === "/" && activeTab !== "data") {
       setActiveTab("data");
+    } else if (pathname === "/about" && activeTab !== "about") {
+      setActiveTab("about");
     }
   }, [pathname, setActiveTab, activeTab]);
 

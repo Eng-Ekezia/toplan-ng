@@ -42,7 +42,7 @@ const LOCAL_STORAGE_KEY = "toplan_projects";
 const SETTINGS_STORAGE_KEY = "toplan_settings";
 
 // --- ALTERAÇÃO AQUI ---
-type ActiveTab = "data" | "results" | "settings" | "graph";
+type ActiveTab = "data" | "results" | "settings" | "graph" | "about";
 
 export interface AppSettings {
   decimalPlaces: number;
