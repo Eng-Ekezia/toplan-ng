@@ -150,6 +150,8 @@ export function calculatePlanimetry(data: CalculationInput): CalculationResult {
         detailDistance * Math.cos(toRadians(detailAzimuth));
 
       detailCoordinates.push({
+        vertexIndex,
+        detailIndex,
         point: detail.name && detail.name.trim() !== "" ? detail.name : `P${vertexIndex + 1}-D${detailIndex + 1}`,
         east: detailEast,
         north: detailNorth,

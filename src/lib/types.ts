@@ -58,6 +58,8 @@ export interface FinalCoordinate {
 
 // Define a estrutura para as coordenadas finais de um ponto de detalhe
 export interface DetailCoordinate {
+  vertexIndex: number;
+  detailIndex: number;
   point: string; // Ex: "P1-D1"
   east: number;
   north: number;

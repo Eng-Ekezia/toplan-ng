@@ -145,6 +145,7 @@ function DetailRow({
                   if (e.key === "Enter") saveName();
                   if (e.key === "Escape") cancelName();
                 }}
+                onBlur={saveName}
               />
               <Button
                 size="icon"

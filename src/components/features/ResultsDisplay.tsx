@@ -70,7 +70,7 @@ export function ResultsDisplay() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {finalCoordinates.map((coord) => (
+              {finalCoordinates.map((coord, coordIndex) => (
                 <React.Fragment key={`fragment-${coord.point}`}>
                   <TableRow>
                     <TableCell className="font-medium">{coord.point}</TableCell>
@@ -82,9 +82,7 @@ export function ResultsDisplay() {
                     </TableCell>
                   </TableRow>
                   {detailCoordinates
-                    .filter((detail) =>
-                      detail.point.startsWith(`${coord.point}-D`)
-                    )
+                    .filter((detail) => detail.vertexIndex === coordIndex)
                     .map((detail) => (
                       <TableRow key={detail.point}>
                         <TableCell className="pl-6 text-muted-foreground">
