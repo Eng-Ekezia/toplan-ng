@@ -262,6 +262,41 @@ export function exportResultsToPDF(
       margin: { left: 14 + (pageWidth - 28) / 2 },
     });
 
+    const maxY = Math.max(doc.lastAutoTable.finalY, doc.lastAutoTable.finalY); // Both tables start at leftTableY
+    y = maxY + 7;
+
+    if (result.detailCoordinates.length > 0) {
+      doc.setFontSize(12);
+      doc.setTextColor(primaryColor);
+      doc.text("Relatório de Irradiações", 14, y);
+      y += 6;
+
+      const detailsBody = result.detailCoordinates.map((d) => [
+        `P${d.vertexIndex + 1}`,
+        d.point,
+        formatAngleToString(d.angle),
+        formatDecimal(d.distance, decimalPlaces),
+        formatAngleToString(d.azimuth),
+        formatDecimal(d.projectionEast, decimalPlaces),
+        formatDecimal(d.projectionNorth, decimalPlaces),
+      ]);
+
+      autoTable(doc, {
+        head: [["Estação", "Ponto Visado", "Ângulo", "Distância", "Azimute", "ΔE", "ΔN"]],
+        body: detailsBody,
+        startY: y,
+        theme: "striped",
+        headStyles: {
+          fillColor: primaryColor,
+          textColor: 255,
+          fontSize: 8,
+          fontStyle: "bold",
+        },
+        styles: { fontSize: 7, cellPadding: 1.5, font: "Times" },
+      });
+      y = doc.lastAutoTable.finalY + 7;
+    }
+
     doc.addPage();
     drawPolygonOnPDF(
       doc,

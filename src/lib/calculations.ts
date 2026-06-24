@@ -143,16 +143,21 @@ export function calculatePlanimetry(data: CalculationInput): CalculationResult {
       detailAzimuth %= 360;
       if (detailAzimuth < 0) detailAzimuth += 360;
 
-      const detailEast =
-        stationCoord.east + detailDistance * Math.sin(toRadians(detailAzimuth));
-      const detailNorth =
-        stationCoord.north +
-        detailDistance * Math.cos(toRadians(detailAzimuth));
+      const projectionEast = detailDistance * Math.sin(toRadians(detailAzimuth));
+      const projectionNorth = detailDistance * Math.cos(toRadians(detailAzimuth));
+
+      const detailEast = stationCoord.east + projectionEast;
+      const detailNorth = stationCoord.north + projectionNorth;
 
       detailCoordinates.push({
         vertexIndex,
         detailIndex,
         point: detail.name && detail.name.trim() !== "" ? detail.name : `P${vertexIndex + 1}-D${detailIndex + 1}`,
+        angle: detailAngleDecimal,
+        distance: detailDistance,
+        azimuth: detailAzimuth,
+        projectionEast,
+        projectionNorth,
         east: detailEast,
         north: detailNorth,
       });

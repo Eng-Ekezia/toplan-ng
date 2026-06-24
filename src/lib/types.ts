@@ -61,6 +61,11 @@ export interface DetailCoordinate {
   vertexIndex: number;
   detailIndex: number;
   point: string; // Ex: "P1-D1"
+  angle: number;
+  distance: number;
+  azimuth: number;
+  projectionEast: number;
+  projectionNorth: number;
   east: number;
   north: number;
 }

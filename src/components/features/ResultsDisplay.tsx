@@ -275,6 +275,42 @@ export function ResultsDisplay() {
                 </div>
               </AccordionContent>
             </AccordionItem>
+
+            {detailCoordinates && detailCoordinates.length > 0 && (
+              <AccordionItem value="item-4">
+                <AccordionTrigger>Relatório de Irradiações</AccordionTrigger>
+                <AccordionContent>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Estação</TableHead>
+                          <TableHead>Ponto Visado</TableHead>
+                          <TableHead>Ângulo</TableHead>
+                          <TableHead>Distância</TableHead>
+                          <TableHead>Azimute</TableHead>
+                          <TableHead>ΔE</TableHead>
+                          <TableHead>ΔN</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {detailCoordinates.map((detail, i) => (
+                          <TableRow key={`detail-report-${i}`}>
+                            <TableCell>P{detail.vertexIndex + 1}</TableCell>
+                            <TableCell>{detail.point}</TableCell>
+                            <TableCell>{formatAngleToString(detail.angle)}</TableCell>
+                            <TableCell>{formatDecimal(detail.distance, settings.decimalPlaces)}</TableCell>
+                            <TableCell>{formatAngleToString(detail.azimuth)}</TableCell>
+                            <TableCell>{formatDecimal(detail.projectionEast, settings.decimalPlaces)}</TableCell>
+                            <TableCell>{formatDecimal(detail.projectionNorth, settings.decimalPlaces)}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            )}
           </Accordion>
         </CardContent>
       </Card>
