@@ -5,12 +5,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  NumberField,
+  NumberFieldDecrement,
+  NumberFieldGroup,
+  NumberFieldIncrement,
+  NumberFieldInput,
+} from "@/components/reui/number-field";
+import { Switch } from "@/components/ui/switch";
 import { useCalculationStore } from "@/store/useCalculationStore";
 import React from "react";
 import { ErrorMessage } from "@/components/ui/error-message"; // Importar o novo componente
@@ -25,32 +26,46 @@ export function PolygonDataForm() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="numPoints">Nº de Vértices</Label>
-            <Input
+            <NumberField
               id="numPoints"
-              type="number"
-              min="3"
               value={input.numPoints}
-              onChange={(e) => setNumPoints(Number(e.target.value))}
-              aria-invalid={!!errors.numPoints}
-            />
+              onValueChange={(value) => setNumPoints(Number(value))}
+              min={3}
+            >
+              <NumberFieldGroup>
+                <NumberFieldDecrement />
+                <NumberFieldInput aria-invalid={!!errors.numPoints} />
+                <NumberFieldIncrement />
+              </NumberFieldGroup>
+            </NumberField>
             <ErrorMessage message={errors.numPoints as string} />
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2 flex flex-col justify-center">
             <Label htmlFor="angleType">Tipo de Ângulo</Label>
-            <Select
-              value={input.angleType}
-              onValueChange={(value: "internal" | "external") =>
-                setInput("angleType", value)
-              }
-            >
-              <SelectTrigger id="angleType">
-                <SelectValue placeholder="Selecione..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="internal">Internos</SelectItem>
-                <SelectItem value="external">Externos</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-2 pt-2 pb-1">
+              <span
+                id="angle-internal"
+                className={`cursor-pointer text-sm font-medium transition-colors ${input.angleType === "internal" ? "text-foreground" : "text-muted-foreground/70"}`}
+                onClick={() => setInput("angleType", "internal")}
+              >
+                Internos
+              </span>
+              <Switch
+                id="angleType"
+                checked={input.angleType === "external"}
+                onCheckedChange={(checked) =>
+                  setInput("angleType", checked ? "external" : "internal")
+                }
+                aria-labelledby="angle-internal angle-external"
+              />
+              <span
+                id="angle-external"
+                className={`cursor-pointer text-sm font-medium transition-colors ${input.angleType === "external" ? "text-foreground" : "text-muted-foreground/70"}`}
+                onClick={() => setInput("angleType", "external")}
+              >
+                Externos
+              </span>
+            </div>
           </div>
         </div>
         <div className="space-y-2">

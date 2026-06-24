@@ -66,12 +66,9 @@ export function calculatePlanimetry(data: CalculationInput): CalculationResult {
     let nextAzimuth;
     const backAzimuth = azimuths[i - 1] + 180;
 
-    if (angleType === "internal") {
-      nextAzimuth = backAzimuth + correctedAngles[i];
-    } else {
-      // external
-      nextAzimuth = backAzimuth - correctedAngles[i];
-    }
+    // Etapa 3 da Tabela 1: Az_Est->PV = Az_Ré->Est + Ang_Est->PV_corrigido ± 180°
+    // azimuths[i - 1] é o Az_Ré->Est
+    nextAzimuth = azimuths[i - 1] + correctedAngles[i] + 180;
 
     nextAzimuth %= 360;
     if (nextAzimuth < 0) nextAzimuth += 360;
